@@ -138,13 +138,16 @@ test_openai_output/
 *.tmp
 *.temp
 
-# Model caches and large files
+# Model caches and large files  
 cache/
 *.model
 *.bin
 *.pt
 *.pth
 *.safetensors
+
+# Backup directories
+engine_backup/
 
 # Log files
 *.log
