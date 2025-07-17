@@ -1,0 +1,31 @@
+name: "Test MBPP Evaluation"
+
+model:
+  backend:
+    - type: vllm
+      model_name: "deepseek-ai/deepseek-coder-6.7b-instruct"
+      tokenizer_name: null
+      model_type: "Chat"
+      dtype: "bfloat16"
+      batch_size: 1
+      temperature: 0.0
+      max_tokens: 1024
+      num_gpus: 1
+      trust_remote_code: true
+
+evaluation:
+  benchmark:
+    - type: MBPP
+      prompt_type: "Instruction"
+  
+  num_samples: 1  # 測試用小數值
+  num_workers: 1
+  
+  prompt_prefix: ""
+  prompt_suffix: ""
+  response_prefix: ""
+  response_suffix: ""
+  
+  output:
+    path: "./test_output"
+    keep_chat: false

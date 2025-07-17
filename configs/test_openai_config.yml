@@ -1,0 +1,18 @@
+evaluation:
+  benchmark:
+  - prompt_type: Instruction
+    type: MBPP
+  num_samples: 1
+  num_workers: 1
+  output:
+    path: ./test_openai_output
+model:
+  backend:
+  - api_key: test-key
+    base_url: null
+    max_tokens: 1024
+    model_name: gpt-3.5-turbo
+    model_type: Chat
+    temperature: 0.0
+    type: openai
+name: Test OpenAI Evaluation

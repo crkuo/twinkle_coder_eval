@@ -1,0 +1,5 @@
+flowchart LR
+    model["LLM Model"] --> communicator["communicator"]
+    communicator --> evaluator["LLM evaluator"] 
+    evaluator --> distributed{{Distributed Evaluation}}
+    distributed --> result["LLM result"]

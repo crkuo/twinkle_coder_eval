@@ -1,0 +1,2 @@
+{"task_id": "mock_1", "generation": "def add(a, b):\n    return a + b"}
+{"task_id": "mock_2", "generation": "def multiply(a, b):\n    return a * b"}

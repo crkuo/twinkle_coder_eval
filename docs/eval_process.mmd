@@ -1,0 +1,10 @@
+flowchart TD
+    Loader(("Benchmark module"))
+    RemoteDataset["Remote Dataset"]
+    LocalDataset["Local Dataset"]
+    Loader -..-> IsDatasetExists{"Is dataset exists in local?"}
+    IsDatasetExists -."No".-> RemoteDataset
+    RemoteDataset --"Download"--> LocalDataset
+    IsDatasetExists -."Yes".-> LocalDataset
+    LocalDataset --> Execute
+    
