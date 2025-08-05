@@ -1,0 +1,28 @@
+# Core Dependencies
+numpy>=1.21.0
+pyyaml>=6.0
+tqdm>=4.64.0
+requests>=2.28.0
+
+# AI/ML Libraries
+torch>=2.0.0
+transformers>=4.30.0
+openai>=1.0.0
+vllm>=0.2.0
+
+# Optional: GPU support (uncomment if needed)
+# torch[cuda]
+
+# Logging
+loguru>=0.6.0
+
+# HTTP client
+httpx>=0.24.0
+
+# Development Dependencies (optional)
+# pytest>=7.0.0
+# black>=22.0.0
+# flake8>=5.0.0
+
+# Note: Some packages may require specific versions depending on your environment
+# Python 3.8+ is recommended
