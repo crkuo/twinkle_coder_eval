@@ -1,19 +1,17 @@
-name: "Test MBPP Evaluation"
+name: "Test Mock Backend with Single MBPP Item"
 
 model:
   backend:
-    - type: openai
-      server_params:
-        api_key: YOUR_API_KEY_HERE
-        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
-      model_name: "deepseek-ai/deepseek-coder-6.7b-instruct"
+    - type: mock
+      server_params: {}
+      model_name: "mock-generator"
 
 evaluation:
   benchmark:
-    - type: MBPP
-      prompt_type: "Chat"
+    - type: TestMBPP
+      prompt_type: "Instruction"
       params:
-        num_samples: 1
+        num_samples: 3
         temperature: 0.0
         max_tokens: 1024
         batch_size: 1

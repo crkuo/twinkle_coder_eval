@@ -17,32 +17,42 @@ from vllm import LLM, SamplingParams
 from vllm.distributed.parallel_state import destroy_distributed_environment, destroy_model_parallel
 
 from backend.base import Generator
-
+from engine.registry import register_backend
 from utils import make_chat_prompt, refine_text
 
+@register_backend('vllm')
 class VllmGenerator(Generator):
     def __init__(self,
                  model_name: str,
-                 tokenizer_name: str = None,
+                 server_params: dict = None,
                  model_type: str = "Instruction",
+                 batch_size: int = 1,
+                 temperature: float = 0.0,
+                 max_tokens: int = 1024,
+                 # 向後兼容參數
+                 tokenizer_name: str = None,
                  dtype: str = "bfloat16",
-                 batch_size : int = 1,
-                 temperature : float = 0.0,
-                 max_tokens : int = 1024,
                  num_gpus: int = 1,
                  trust_remote_code: bool = True,
+                 **kwargs
                 ) -> None:
         super().__init__(model_name)
 
         print("Initializing a decoder model: {} ...".format(model_name))
-        self.tokenizer_name = tokenizer_name if tokenizer_name is not None else model_name
+        
+        # 參數處理邏輯：優先使用 server_params，向後兼容直接參數
+        if server_params is None:
+            server_params = {}
+            
+        # 合併參數，server_params 優先
+        self.tokenizer_name = server_params.get('tokenizer_name', tokenizer_name) or model_name
         self.model_type = model_type
         self.batch_size = batch_size
         self.temperature = temperature
         self.max_tokens = max_tokens
-        self.dtype = dtype
-        self.num_gpus = num_gpus
-        self.trust_remote_code = trust_remote_code
+        self.dtype = server_params.get('dtype', dtype)
+        self.num_gpus = server_params.get('num_gpus', num_gpus)
+        self.trust_remote_code = server_params.get('trust_remote_code', trust_remote_code)
         
         self.tokenizer = AutoTokenizer.from_pretrained(self.tokenizer_name,
                                                        model_max_length = self.max_tokens,

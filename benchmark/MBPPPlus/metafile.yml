@@ -1,0 +1,12 @@
+Name: MBPPPlus
+Paper: 
+  Title: "MBPP Plus: A comprehensive evaluation suite for Python code generation"
+  URL: https://arxiv.org/abs/2210.14868
+  Authors: "Google Research"
+License: Apache-2.0
+Dataset:
+  - Source: MBPP Plus
+    URL: https://github.com/google-research/google-research/tree/master/mbpp
+    Split: test
+    Size: 399
+Task: code-generation

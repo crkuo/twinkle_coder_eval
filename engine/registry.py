@@ -42,7 +42,7 @@ class Registry:
         
         return _register
     
-    def get(self, name: str) -> Optional[Type]:
+    def get(self, name: str, location: str = None) -> Optional[Type]:
         """
         獲取註冊的模組，支援動態載入
         
@@ -57,12 +57,43 @@ class Registry:
             return self._module_dict[name]
         
         # 如果沒有找到，嘗試動態載入
-        if not self._imported and self._locations:
-            self._import_modules()
-            if name in self._module_dict:
-                return self._module_dict[name]
+        return self.get_module(name, location)
+    
+    def get_module(self, mod_name: str, location: str = None) -> Optional[Type]:
+        """
+        獲取模組，支援指定位置的動態載入
+        適用於載入新的 benchmark 或 backend
         
-        return None
+        Args:
+            name: 模組名稱 (如 "LeetCode")
+            location: 模組位置模板 (如 "benchmark.{name}.{name}")
+            
+        Returns:
+            註冊的類或 None
+            
+        Example:
+            BENCHMARKS.get_module("LeetCode", "benchmark.{name}.{name}")
+            # 會嘗試載入 benchmark.LeetCode.LeetCode 模組
+        """
+        # 首先嘗試從已註冊的模組獲取
+        if mod_name in self._module_dict:
+            return self._module_dict[mod_name]
+        if location is None:
+            location = f"{self._name}.{mod_name}.{mod_name}"
+        # 如果指定了位置模板，格式化後載入
+        formatted_location = location.format(name=mod_name)
+        try:
+            importlib.import_module(formatted_location)
+            self.logger.debug(f"Successfully imported {formatted_location}")
+            
+            # 載入後，裝飾器會自動註冊，再次嘗試獲取
+            if mod_name in self._module_dict:
+                return self._module_dict[mod_name]
+            else:
+                return None
+        except ImportError as e:
+            self.logger.warning(f"Failed to import {formatted_location}: {e}")
+            return None
     
     def _import_modules(self):
         """
@@ -104,6 +135,9 @@ class Registry:
         obj_type = cfg.pop('type')
         obj_cls = registry.get(obj_type)
         
+        if obj_cls is None:
+            raise ValueError(f"Module '{obj_type}' not found in registry. Available modules: {list(registry._module_dict.keys())}")
+        
         # 根據類的 __init__ 方法簽名過濾參數
         init_signature = inspect.signature(obj_cls.__init__)
         valid_params = {}
@@ -112,6 +146,10 @@ class Registry:
             if param_name == 'self':
                 continue
             
+            # 處理 **kwargs 參數 - 視為空字典
+            if param.kind == inspect.Parameter.VAR_KEYWORD:
+                continue
+                
             if param_name in cfg:
                 valid_params[param_name] = cfg[param_name]
             elif param.default is not inspect.Parameter.empty:
@@ -160,12 +198,18 @@ def build_from_cfg(cfg: Dict[str, Any], registry: Registry) -> Any:
     return registry.build(cfg)
 
 
-# 全域註冊表
-BACKENDS = Registry('backends')
-BENCHMARKS = Registry('benchmarks')
-EVALUATORS = Registry('evaluators')
-MODELS = Registry('models')
-DATASETS = Registry('datasets')
+# 全域註冊表 - 支援自動載入
+BACKENDS = Registry('backend', locations=[
+    'backend.vllm.vllm',
+    'backend.openai.openai'
+])
+BENCHMARKS = Registry('benchmark', locations=[
+    'benchmark.MBPP.MBPP',
+    'benchmark.TestMBPP.TestMBPP'
+])
+EVALUATORS = Registry('evaluator')
+MODELS = Registry('model')
+DATASETS = Registry('dataset')
 
 
 # 裝飾器別名

@@ -1,0 +1,12 @@
+Name: BigCodeBench
+Paper: 
+  Title: "BigCodeBench: Benchmarking Code Generation with Diverse Function Calls and Complex Instructions"
+  URL: https://arxiv.org/abs/2406.15877
+  Authors: "Terry Yue Zhuo, Minh Chien Vu, Jenny Chim, et al."
+License: MIT
+Dataset:
+  - Source: BigCodeBench
+    URL: https://github.com/bigcode-project/bigcodebench
+    Split: test
+    Size: 1140
+Task: code-generation

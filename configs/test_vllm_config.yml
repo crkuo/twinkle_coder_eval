@@ -1,17 +1,19 @@
-name: "Test MBPP Evaluation"
+name: "Test vLLM Backend with server_params"
 
 model:
   backend:
-    - type: openai
+    - type: vllm
       server_params:
-        api_key: YOUR_API_KEY_HERE
-        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+        tokenizer_name: null
+        dtype: "bfloat16"
+        num_gpus: 1
+        trust_remote_code: true
       model_name: "deepseek-ai/deepseek-coder-6.7b-instruct"
 
 evaluation:
   benchmark:
     - type: MBPP
-      prompt_type: "Chat"
+      prompt_type: "Instruction"
       params:
         num_samples: 1
         temperature: 0.0

@@ -15,20 +15,20 @@ from engine.registry import register_benchmark
 info = read_metafile(os.path.dirname(os.path.abspath(__file__)))
 
 
-@register_benchmark('MBPP')
-class MBPP(Benchmark):
+@register_benchmark('TestMBPP')
+class TestMBPP(Benchmark):
     name: str = info.get("Name")
     path = os.path.join(env.DATASET_CACHE_FOLDER, name, "mbpp.jsonl")
     few_shots_start = 1
     few_shots_end = 4
 
     test_start = 10
-    test_end = 510
+    test_end = 11  # 只測試第一筆資料 (task_id=10)
 
     def __init__(self,
                  name:str = "MBPP",
                  timeout:float = 3.0,
-                 prompt_type:str = "Chat"): 
+                 prompt_type:str = "Instruction"): 
         super().__init__()
         
         self.name = name
@@ -62,7 +62,6 @@ class MBPP(Benchmark):
             task_data['text'] = refine_text(task_data['text'])
             
             tasks[task_id] = task_data
-        
         return tasks
 
     
@@ -105,6 +104,7 @@ class MBPP(Benchmark):
         """
         Builds the prompt for the LM to generate from.
         """
+
 
         few_shots_prompts = self.get_few_shots_prompts()
         prompts = []

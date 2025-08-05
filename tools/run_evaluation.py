@@ -1,6 +1,7 @@
 import os
 import argparse
 import numpy as np
+import hashlib
 from pathlib import Path
 
 # 設置環境變數
@@ -16,10 +17,9 @@ from typing import Callable, List
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # 導入 refactor 模組
-import yaml
 from utils import refine_text, write_jsonl, group_and_count, estimate_pass_at_k
-from backend.vllm.vllm import VllmGenerator
-from factory import BenchmarkFactory
+from engine.registry import BACKENDS, BENCHMARKS
+from engine.config import Config
 
 
 def multi_process_function(function: Callable,
@@ -44,48 +44,59 @@ def multi_process_function(function: Callable,
     return results
 
 
-def create_args_from_config(config_path: str):
+def dynamic_import_benchmark(benchmark_type: str):
     """
-    從 YAML 配置文件創建 args 對象
+    動態導入 benchmark 模組
     """
-    with open(config_path, 'r', encoding='utf-8') as f:
-        config = yaml.safe_load(f)
+    try:
+        module_name = f"benchmark.{benchmark_type}.{benchmark_type}"
+        __import__(module_name)
+        print(f"Successfully imported {benchmark_type} benchmark")
+    except ImportError as e:
+        print(f"Warning: Failed to import {benchmark_type}: {e}")
+        # 嘗試其他可能的路徑
+        try:
+            alt_module_name = f"benchmark.{benchmark_type}"
+            __import__(alt_module_name)
+            print(f"Successfully imported {benchmark_type} benchmark (alternative path)")
+        except ImportError:
+            print(f"Failed to import {benchmark_type} benchmark from any path")
+
+
+def generate_config_signature(benchmark_params: dict) -> str:
+    """
+    基於關鍵參數生成配置簽名，用於區分不同的配置
+    """
+    # 選擇影響結果的關鍵參數
+    key_params = {
+        'num_samples': benchmark_params.get('num_samples', 1),
+        'temperature': benchmark_params.get('temperature', 0.0),
+        'max_tokens': benchmark_params.get('max_tokens', 1024),
+        'prompt_prefix': benchmark_params.get('prompt_prefix', ''),
+        'prompt_suffix': benchmark_params.get('prompt_suffix', ''),
+        'response_prefix': benchmark_params.get('response_prefix', ''),
+        'response_suffix': benchmark_params.get('response_suffix', ''),
+    }
     
-    class Args:
-        def __init__(self):
-            # 模型配置
-            model_config = config.get('model', {})
-            backend_config = model_config.get('backend', [{}])[0]
-            
-            self.model_name = backend_config.get('model_name', 'default_model')
-            self.tokenizer_name = backend_config.get('tokenizer_name')
-            self.model_type = backend_config.get('model_type', 'Instruction')
-            self.num_gpus = backend_config.get('num_gpus', 1)
-            self.batch_size = backend_config.get('batch_size', 1)
-            self.temperature = backend_config.get('temperature', 0.0)
-            self.trust_remote_code = backend_config.get('trust_remote_code', True)
-            self.max_tokens = backend_config.get('max_tokens', 1024)
-            
-            # 評估配置
-            eval_config = config.get('evaluation', {})
-            benchmark_config = eval_config.get('benchmark', [{}])[0]
-            
-            self.task = benchmark_config.get('type', 'MBPP')
-            self.prompt_type = benchmark_config.get('prompt_type', 'Instruction')
-            self.num_samples = eval_config.get('num_samples', 200)
-            self.num_workers = eval_config.get('num_workers', 1)
-            
-            # 提示配置
-            self.prompt_prefix = eval_config.get('prompt_prefix', '')
-            self.prompt_suffix = eval_config.get('prompt_suffix', '')
-            self.response_prefix = eval_config.get('response_prefix', '')
-            self.response_suffix = eval_config.get('response_suffix', '')
-            
-            # 輸出配置
-            output_config = eval_config.get('output', {})
-            self.save_path = output_config.get('path', './output')
+    # 生成簽名字符串
+    signature_parts = []
+    for key, value in sorted(key_params.items()):
+        if value:  # 只包含非空值
+            if isinstance(value, str) and value.strip():
+                signature_parts.append(f"{key}={value}")
+            elif isinstance(value, (int, float)) and value != 0:
+                signature_parts.append(f"{key}={value}")
     
-    return Args()
+    if not signature_parts:
+        return "default"
+    
+    signature_str = "_".join(signature_parts)
+    
+    # 如果簽名太長，使用 hash
+    if len(signature_str) > 50:
+        return hashlib.md5(signature_str.encode()).hexdigest()[:8]
+    
+    return signature_str
 
 
 def main():
@@ -95,91 +106,142 @@ def main():
     
     args = parser.parse_args()
     
-    # 從配置文件創建 args
-    config_args = create_args_from_config(args.config)
+    # 使用 Config.fromfile 載入配置（MMOCR 風格）
+    config = Config.fromfile(args.config)
+    print(f"Loaded config from: {args.config}")
     
-    # 覆蓋保存路徑（如果提供）
-    if args.save_path:
-        config_args.save_path = args.save_path
+    # 獲取基準測試配置列表
+    benchmark_configs = config.evaluation.benchmark
+    assert len(benchmark_configs) > 0, "No benchmarks specified in config"
     
-    save_path = config_args.save_path
-    os.makedirs(save_path, exist_ok=True)
-    print(f"Results will be saved to: {save_path}")
-
-    # 創建基準測試
-    task = BenchmarkFactory.get_task(config_args)
-    print(f"Loaded benchmark: {config_args.task}")
-
-    # 創建後端
-    decoder = VllmGenerator(
-        model_name=config_args.model_name,
-        model_type=config_args.model_type,
-        tokenizer_name=config_args.tokenizer_name,
-        num_gpus=config_args.num_gpus,
-        batch_size=config_args.batch_size,
-        temperature=config_args.temperature,
-        trust_remote_code=config_args.trust_remote_code,
-        max_tokens=config_args.max_tokens
-    )
-    print(f"Loaded model: {config_args.model_name}")
-
-    # 獲取提示
-    prompts = task.get_prompt()
-    print(f"Generated {len(prompts)} prompts")
-
-    # 處理提示前後綴
-    for prompt in prompts:
-        prompt['prompt'] = refine_text(config_args.prompt_prefix + prompt['prompt'] + config_args.prompt_suffix)
+    # 統一使用 for-loop 處理所有 benchmark（無論是 1 個還是多個）
+    all_results = []
+    for i, benchmark_config in enumerate(benchmark_configs):
+        benchmark_type = benchmark_config['type']
+        print(f"\n=== Running Benchmark {i+1}/{len(benchmark_configs)}: {benchmark_type} ===")
+        
+        # 動態導入 benchmark
+        dynamic_import_benchmark(benchmark_type)
+        
+        # 從 params 中提取參數
+        benchmark_params = benchmark_config.get('params', {})
+        
+        # 構建輸出路徑，加入配置簽名以區分不同參數
+        experiment_name = config.get('experiment_name') or config.model.backend[0].model_name
+        config_signature = generate_config_signature(benchmark_params)
+        
+        # 生成唯一的 benchmark 目錄名
+        if config_signature == "default":
+            benchmark_dir = benchmark_type
+        else:
+            benchmark_dir = f"{benchmark_type}_{config_signature}"
+        
+        save_path = os.path.join('result', experiment_name, benchmark_dir)
+        if args.save_path:
+            save_path = os.path.join(args.save_path, benchmark_dir)
+        
+        os.makedirs(save_path, exist_ok=True)
+        print(f"Results will be saved to: {save_path}")
+        print(f"Config signature: {config_signature}")
+        
+        # 使用 registry 構建 benchmark
+        task = BENCHMARKS.build(benchmark_config)
+        print(f"Loaded benchmark: {benchmark_type}")
+        
+        # 創建後端（所有 benchmark 共用同一個模型）
+        backend_config = config.model.backend[0]
+        backend_type = backend_config['type']
+        print(f"Creating {backend_type} backend using registry...")
+        
+        # 合併 backend 參數和 benchmark 參數
+        merged_backend_config = dict(backend_config)
+        merged_backend_config.update(benchmark_params)
+        
+        decoder = BACKENDS.build(merged_backend_config)
+        model_name = backend_config['model_name']
+        print(f"Loaded model: {model_name}")
+        
+        # 獲取提示
+        prompts = task.get_prompt()
+        print(f"Generated {len(prompts)} prompts")
+        
+        # 處理提示前後綴（從 params 中獲取）
+        prompt_prefix = benchmark_params.get('prompt_prefix', '')
+        prompt_suffix = benchmark_params.get('prompt_suffix', '')
+        response_prefix = benchmark_params.get('response_prefix', '')
+        response_suffix = benchmark_params.get('response_suffix', '')
+        
+        for prompt in prompts:
+            prompt['prompt'] = refine_text(prompt_prefix + prompt['prompt'] + prompt_suffix)
+        
+        write_jsonl(os.path.join(save_path, "prompts.jsonl"), prompts)
+        print("Saved prompts.jsonl")
+        
+        # 設置停止詞
+        model_type = merged_backend_config.get('model_type', 'Chat')
+        end_words = task.general_stop_words + task.completion_stop_words if model_type == "Base" else task.general_stop_words
+        
+        # 生成回應
+        print("Starting generation...")
+        num_samples = benchmark_params.get('num_samples', 1)
+        generations = decoder.generate(
+            prompts,
+            num_samples,
+            end_words,
+            response_prefix,
+            response_suffix
+        )
+        write_jsonl(os.path.join(save_path, "generations.jsonl"), generations)
+        print("Saved generations.jsonl")
+        
+        # 後處理解決方案
+        print("Post-processing solutions...")
+        num_workers = benchmark_params.get('num_workers', 1)
+        solutions = multi_process_function(
+            function=task.postprocess_generation,
+            parameters=generations,
+            num_workers=num_workers,
+            desc="Post-processing solutions"
+        )
+        write_jsonl(os.path.join(save_path, "solutions.jsonl"), solutions)
+        print("Saved solutions.jsonl")
+        
+        # 評估解決方案
+        print("Evaluating solutions...")
+        evaluations = multi_process_function(
+            function=task.process_results,
+            parameters=solutions,
+            num_workers=num_workers,
+            desc="Evaluating solutions"
+        )
+        write_jsonl(os.path.join(save_path, "evaluation.jsonl"), evaluations)
+        print("Saved evaluation.jsonl")
+        
+        # 計算分數
+        result_list = group_and_count(evaluations, group_key='task_id', count_key='passed')
+        pass_rate = float(np.mean(estimate_pass_at_k(num_samples=num_samples, num_correct=result_list, k=1)))
+        
+        result = {
+            "benchmark": benchmark_type,
+            "score": pass_rate,
+            "num_samples": num_samples,
+            "total_prompts": len(prompts)
+        }
+        write_jsonl(os.path.join(save_path, "result.json"), [result])
+        
+        print(f"Pass@1: {pass_rate:.4f}")
+        print(f"Results saved to: {save_path}")
+        
+        all_results.append(result)
     
-    write_jsonl(os.path.join(save_path, "prompts.jsonl"), prompts)
-    print("Saved prompts.jsonl")
-
-    # 設置停止詞
-    end_words = task.general_stop_words + task.completion_stop_words if config_args.model_type == "Base" else task.general_stop_words
+    # 輸出總結
+    print(f"\n=== Evaluation Summary ===")
+    for result in all_results:
+        print(f"{result['benchmark']}: Pass@1 = {result['score']:.4f} ({result['total_prompts']} prompts, {result['num_samples']} samples each)")
     
-    # 生成回應
-    print("Starting generation...")
-    generations = decoder.generate(
-        prompts,
-        config_args.num_samples,
-        end_words,
-        config_args.response_prefix,
-        config_args.response_suffix
-    )
-    write_jsonl(os.path.join(save_path, "generations.jsonl"), generations)
-    print("Saved generations.jsonl")
-
-    # 後處理解決方案
-    print("Post-processing solutions...")
-    solutions = multi_process_function(
-        function=task.postprocess_generation,
-        parameters=generations,
-        num_workers=config_args.num_workers,
-        desc="Post-processing solutions"
-    )
-    write_jsonl(os.path.join(save_path, "solutions.jsonl"), solutions)
-    print("Saved solutions.jsonl")
-
-    # 評估解決方案
-    print("Evaluating solutions...")
-    evaluations = multi_process_function(
-        function=task.process_results,
-        parameters=solutions,
-        num_workers=config_args.num_workers,
-        desc="Evaluating solutions"
-    )
-    write_jsonl(os.path.join(save_path, "evaluation.jsonl"), evaluations)
-    print("Saved evaluation.jsonl")
-
-    # 計算分數
-    result_list = group_and_count(evaluations, group_key='task_id', count_key='passed')
-    pass_rate = float(np.mean(estimate_pass_at_k(num_samples=config_args.num_samples, num_correct=result_list, k=1)))
-    
-    result = {"score": pass_rate}
-    write_jsonl(os.path.join(save_path, "result.json"), [result])
-    
-    print(f"Pass@1: {pass_rate:.4f}")
-    print(f"Results saved to: {save_path}")
+    if len(all_results) > 1:
+        avg_score = np.mean([r['score'] for r in all_results])
+        print(f"Average Pass@1: {avg_score:.4f}")
 
 
 if __name__ == "__main__":
