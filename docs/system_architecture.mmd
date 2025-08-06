@@ -1,0 +1,92 @@
+graph TB
+    subgraph "🎯 User Interface Layer"
+        CLI[["🖥️ Command Line Interface<br/>tools/run_evaluation.py"]]
+        CONFIG[["⚙️ Configuration Files<br/>configs/*.yml"]]
+    end
+    
+    subgraph "🚀 Engine Layer - Core Orchestration"
+        REGISTRY[["📋 Registry System<br/>engine/registry.py<br/>• Dynamic Loading<br/>• Component Discovery<br/>• Auto Registration"]]
+        CONFIGMGR[["🔧 Config Manager<br/>engine/config.py<br/>• YAML Processing<br/>• Parameter Validation<br/>• Inheritance Support"]]
+        ORCHESTRATOR[["🎵 Evaluation Orchestrator<br/>tools/run_evaluation.py<br/>• Multi-benchmark Coordination<br/>• Result Aggregation<br/>• Parameter-based Directories"]]
+    end
+    
+    subgraph "🔌 Backend Layer - Model Inference"
+        BACKEND_BASE[["🏗️ Generator Base<br/>backend/base.py"]]
+        OPENAI[["🤖 OpenAI Backend<br/>backend/openai/<br/>• API Integration<br/>• Chat/Completion<br/>• Error Handling"]]
+        VLLM[["⚡ vLLM Backend<br/>backend/vllm/<br/>• High Performance<br/>• Local Models<br/>• Batch Processing"]]
+        MOCK[["🎭 Mock Backend<br/>backend/mock/<br/>• Testing Support<br/>• CI/CD Integration"]]
+        CUSTOM_BACKEND[["🔧 Custom Backend<br/>Extensible..."]]
+    end
+    
+    subgraph "📊 Benchmark Layer - Evaluation Tasks"
+        BENCHMARK_BASE[["📏 Benchmark Base<br/>benchmark/base.py"]]
+        MBPP[["📝 MBPP<br/>benchmark/MBPP/<br/>• Python Problems<br/>• 374 Tasks"]]
+        HUMANEVAL[["🧑‍💻 HumanEval<br/>benchmark/HumanEval/<br/>• Function Completion<br/>• 164 Tasks"]]
+        BIGCODEBENCH[["🏢 BigCodeBench<br/>benchmark/BigCodeBench/<br/>• Complex Projects<br/>• 1140+ Tasks"]]
+        LEETCODE[["🧮 LeetCode<br/>benchmark/LeetCode/<br/>• Algorithm Problems<br/>• 300+ Tasks"]]
+        CUSTOM_BENCHMARK[["📊 Custom Benchmark<br/>Extensible..."]]
+    end
+    
+    subgraph "🛡️ Execution Layer - Safe Code Running"
+        SANITIZER[["🧹 Code Sanitizer<br/>sanitize.py<br/>• Python Extraction<br/>• Code Cleaning"]]
+        EXECUTOR[["🔒 Safe Executor<br/>eval/execution.py<br/>• Sandboxed Execution<br/>• Timeout Protection<br/>• Resource Limits"]]
+        METRICS[["📈 Metrics Calculator<br/>utils.py<br/>• Pass@k Evaluation<br/>• Success Rates"]]
+    end
+    
+    subgraph "💾 Data Layer"
+        CACHE[["🗃️ Dataset Cache<br/>cache/<br/>• Local Storage<br/>• Auto Download"]]
+        RESULTS[["📁 Results Storage<br/>result/<br/>• Structured Output<br/>• JSON/JSONL Format"]]
+        METADATA[["📋 Metadata<br/>metafile.yml<br/>• Benchmark Info<br/>• Paper References"]]
+    end
+    
+    %% User Flow
+    CLI --> CONFIG
+    CONFIG --> CONFIGMGR
+    CLI --> ORCHESTRATOR
+    
+    %% Engine Layer Connections
+    ORCHESTRATOR --> REGISTRY
+    ORCHESTRATOR --> CONFIGMGR
+    REGISTRY -.->|"Dynamic Loading"| BACKEND_BASE
+    REGISTRY -.->|"Dynamic Loading"| BENCHMARK_BASE
+    
+    %% Backend Registration
+    BACKEND_BASE --> OPENAI
+    BACKEND_BASE --> VLLM
+    BACKEND_BASE --> MOCK
+    BACKEND_BASE --> CUSTOM_BACKEND
+    
+    %% Benchmark Registration  
+    BENCHMARK_BASE --> MBPP
+    BENCHMARK_BASE --> HUMANEVAL
+    BENCHMARK_BASE --> BIGCODEBENCH
+    BENCHMARK_BASE --> LEETCODE
+    BENCHMARK_BASE --> CUSTOM_BENCHMARK
+    
+    %% Execution Flow
+    ORCHESTRATOR --> BACKEND_BASE
+    ORCHESTRATOR --> BENCHMARK_BASE
+    BACKEND_BASE --> SANITIZER
+    SANITIZER --> EXECUTOR
+    EXECUTOR --> METRICS
+    METRICS --> RESULTS
+    
+    %% Data Flow
+    BENCHMARK_BASE --> CACHE
+    BENCHMARK_BASE --> METADATA
+    CACHE -.->|"Dataset Loading"| BENCHMARK_BASE
+    
+    %% Styling
+    classDef userLayer fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef engineLayer fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef backendLayer fill:#e8f5e8,stroke:#1b5e20,stroke-width:2px
+    classDef benchmarkLayer fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef executionLayer fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef dataLayer fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+    
+    class CLI,CONFIG userLayer
+    class REGISTRY,CONFIGMGR,ORCHESTRATOR engineLayer
+    class BACKEND_BASE,OPENAI,VLLM,MOCK,CUSTOM_BACKEND backendLayer
+    class BENCHMARK_BASE,MBPP,HUMANEVAL,BIGCODEBENCH,LEETCODE,CUSTOM_BENCHMARK benchmarkLayer
+    class SANITIZER,EXECUTOR,METRICS executionLayer
+    class CACHE,RESULTS,METADATA dataLayer

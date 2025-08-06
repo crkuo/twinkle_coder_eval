@@ -1,0 +1,185 @@
+classDiagram
+    %% Engine Layer Classes
+    class Registry {
+        -_name: str
+        -_module_dict: Dict[str, Type]
+        -_locations: List[str]
+        -_imported: bool
+        -_build_func: Callable
+        +register_module(name, force) decorator
+        +get(name) Optional[Type]
+        +get_module(mod_name, location) Optional[Type]
+        +build(cfg) Any
+        +list_modules() List[str]
+        -_import_modules()
+        -_default_build_func()
+    }
+    
+    class Config {
+        +data: Dict
+        +fromfile(filename) Config
+        +get(key) Any
+        +update(other)
+        +to_dict() Dict
+    }
+    
+    %% Backend Layer Classes
+    class Generator {
+        <<abstract>>
+        +model_name: str
+        +__init__(model_name)
+        +generate(prompt_set, num_samples, eos, response_prefix, response_suffix)* List[Dict]
+        +is_chat()* bool
+    }
+    
+    class OpenaiGenerator {
+        +client: OpenAI
+        +model_type: str
+        +batch_size: int
+        +temperature: float
+        +max_tokens: int
+        +__init__(model_name, server_params, model_type, ...)
+        +generate(prompt_set, num_samples, eos, response_prefix, response_suffix) List[Dict]
+        +is_chat() bool
+    }
+    
+    class VllmGenerator {
+        +model: LLM
+        +tokenizer: AutoTokenizer
+        +model_type: str
+        +batch_size: int
+        +temperature: float
+        +max_tokens: int
+        +__init__(model_name, server_params, model_type, ...)
+        +generate(prompt_set, num_samples, eos, response_prefix, response_suffix) List[Dict]
+        +is_chat() bool
+        +release_memory()
+    }
+    
+    class MockGenerator {
+        +mock_solutions: Dict
+        +__init__(model_name, server_params)
+        +generate(prompt_set, num_samples, eos, response_prefix, response_suffix) List[Dict]
+    }
+    
+    %% Benchmark Layer Classes
+    class Benchmark {
+        <<abstract>>
+        +name: str
+        +imports: List[str]
+        +general_stop_words: List[str]
+        +completion_stop_words: List[str]
+        +__init__()
+        +get_prompt()* List[Dict]
+        +postprocess_generation(generation)* Dict
+        +process_results(solution)* Dict
+        +prepare_dataset()*
+    }
+    
+    class MBPP {
+        +path: str
+        +few_shots_start: int
+        +few_shots_end: int
+        +test_start: int
+        +test_end: int
+        +tasks: Dict
+        +timeout: float
+        +prompt_type: str
+        +__init__(name, timeout, prompt_type)
+        +prepare_dataset()
+        +get_task() Dict
+        +get_prompt() List[Dict]
+        +postprocess_generation(generation) Dict
+        +process_results(solution) Dict
+        +fewshot_examples() List
+        +format_prompt(problem, tests, code) str
+    }
+    
+    class HumanEval {
+        +path: str
+        +tasks: Dict
+        +timeout: float
+        +prompt_type: str
+        +__init__(name, timeout, prompt_type)
+        +prepare_dataset()
+        +get_task() Dict
+        +get_prompt() List[Dict]
+        +postprocess_generation(generation) Dict
+        +process_results(solution) Dict
+    }
+    
+    class BigCodeBench {
+        +path: str
+        +tasks: Dict
+        +timeout: float
+        +prompt_type: str
+        +subset: Literal["complete", "instruct"]
+        +__init__(name, timeout, prompt_type, subset)
+        +prepare_dataset()
+        +get_task() Dict
+        +get_prompt() List[Dict]
+        +postprocess_generation(generation) Dict
+        +process_results(solution) Dict
+    }
+    
+    %% Utility Classes
+    class ExecutionResult {
+        +task_id: str
+        +completion_id: int
+        +passed: bool
+        +result: str
+        +exec_time: float
+        +error_msg: str
+    }
+    
+    class EvaluationOrchestrator {
+        +config: Config
+        +benchmarks: List[Benchmark]
+        +backends: List[Generator]
+        +__init__(config_path)
+        +run_evaluation() List[Dict]
+        +generate_config_signature(params) str
+        +multi_process_function(function, parameters, num_workers) List
+    }
+    
+    %% Global Registries
+    class GlobalRegistries {
+        <<singleton>>
+        +BACKENDS: Registry
+        +BENCHMARKS: Registry
+        +EVALUATORS: Registry
+        +MODELS: Registry
+        +DATASETS: Registry
+    }
+    
+    %% Relationships
+    Generator <|-- OpenaiGenerator : implements
+    Generator <|-- VllmGenerator : implements  
+    Generator <|-- MockGenerator : implements
+    
+    Benchmark <|-- MBPP : implements
+    Benchmark <|-- HumanEval : implements
+    Benchmark <|-- BigCodeBench : implements
+    
+    Registry ||--o GlobalRegistries : contains
+    Config ||--o EvaluationOrchestrator : uses
+    
+    EvaluationOrchestrator ||--o Registry : uses
+    EvaluationOrchestrator ||--o Generator : coordinates
+    EvaluationOrchestrator ||--o Benchmark : coordinates
+    
+    Benchmark ..> ExecutionResult : produces
+    Generator ..> Benchmark : provides_input_to
+    
+    %% Registry relationships
+    Registry ||--o Generator : manages
+    Registry ||--o Benchmark : manages
+    
+    %% Notes
+    note for Generator "Abstract base class for all\nmodel inference backends.\nImplements the Strategy pattern."
+    
+    note for Benchmark "Abstract base class for all\nevaluation benchmarks.\nImplements Template Method pattern."
+    
+    note for Registry "Implements Registry pattern with\ndynamic loading capabilities.\nSupports plugin architecture."
+    
+    note for EvaluationOrchestrator "Main controller that coordinates\nthe entire evaluation pipeline.\nImplements Facade pattern."
