@@ -1,0 +1,42 @@
+Name: 'MBPP'
+Paper: 
+  Title: Program Synthesis with Large Language Models
+  URL: https://doi.org/10.48550/arXiv.2108.07732
+  Year: 2021
+  BibTex: '@article{DBLP:journals/corr/abs-2108-07732,
+    author       = {Jacob Austin and,
+                    Augustus Odena and
+                    Maxwell I. Nye and
+                    Maarten Bosma and
+                    Henryk Michalewski and
+                    David Dohan and
+                    Ellen Jiang and
+                    Carrie J. Cai and
+                    Michael Terry and
+                    Quoc V. Le and
+                    Charles Sutton},
+    title        = {Program Synthesis with Large Language Models},
+    journal      = {CoRR},
+    volume       = {abs/2108.07732},
+    year         = {2021},
+    url          = {https://arxiv.org/abs/2108.07732},
+    eprinttype    = {arXiv},
+    eprint       = {2108.07732},
+    timestamp    = {Fri, 29 Apr 2022 17:42:58 +0200},
+    biburl       = {https://dblp.org/rec/journals/corr/abs-2108-07732.bib},
+    bibsource    = {dblp computer science bibliography, https://dblp.org}
+  }'
+Data:
+  Website: https://github.com/google-research/google-research/tree/master/mbpp
+  Language:
+    - English
+  Program Language:
+    - Python
+  Scene:
+    - Code
+  Tasks:
+    - Evaluation
+  License:
+    Type: N/A
+    Link: N/A
+  Format: jsonl

@@ -1,0 +1,27 @@
+name: "Test Mock Backend with Single MBPP Item"
+
+model:
+  backend:
+    - type: mock
+      server_params: {}
+      model_name: "mock-generator"
+
+evaluation:
+  benchmark:
+    - type: TestMBPP
+      prompt_type: "Instruction"
+      params:
+        num_samples: 3
+        temperature: 0.0
+        max_tokens: 1024
+        batch_size: 1
+        num_workers: 1
+        prompt_prefix: ""
+        prompt_suffix: ""
+        response_prefix: ""
+        response_suffix: ""
+  
+  output:
+    keep_chat: false
+    # path 會自動構建為 result/{model_name}/{benchmark_type}/
+    # 可選：使用 experiment_name 覆蓋模型名稱

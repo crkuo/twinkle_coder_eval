@@ -1,0 +1,12 @@
+Name: HumanEval
+Paper: 
+  Title: "Evaluating Large Language Models Trained on Code"
+  URL: https://arxiv.org/abs/2107.03374
+  Authors: "Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, et al."
+License: MIT
+Dataset:
+  - Source: OpenAI HumanEval
+    URL: https://github.com/openai/human-eval
+    Split: test
+    Size: 164
+Task: code-completion

@@ -1,0 +1,31 @@
+name: "Test Experiment Name Override"
+
+# 實驗名稱會覆蓋模型名稱作為結果目錄
+experiment_name: "gemini-flash-experiment"
+
+model:
+  backend:
+    - type: openai
+      server_params:
+        api_key: YOUR_API_KEY_HERE
+        base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+      model_name: "gemini-2.5-flash"
+
+evaluation:
+  benchmark:
+    - type: TestMBPP
+      prompt_type: "Chat"
+      params:
+        num_samples: 2
+        temperature: 0.0
+        max_tokens: 1024
+        batch_size: 1
+        num_workers: 1
+        prompt_prefix: ""
+        prompt_suffix: ""
+        response_prefix: ""
+        response_suffix: ""
+  
+  output:
+    keep_chat: false
+    # 結果將存放在 result/gemini-flash-experiment/TestMBPP_{config_signature}/

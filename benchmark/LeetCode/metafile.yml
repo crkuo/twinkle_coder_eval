@@ -1,0 +1,12 @@
+Name: LeetCode
+Paper: 
+  Title: "LeetCode Programming Problems Dataset"
+  URL: https://leetcode.com/
+  Authors: "LeetCode"
+License: Custom
+Dataset:
+  - Source: LeetCode
+    URL: https://leetcode.com/
+    Split: test
+    Size: varies
+Task: algorithmic-problem-solving

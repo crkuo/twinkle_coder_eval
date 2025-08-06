@@ -1,0 +1,31 @@
+name: "Test vLLM Backend with server_params"
+
+model:
+  backend:
+    - type: vllm
+      server_params:
+        tokenizer_name: null
+        dtype: "bfloat16"
+        num_gpus: 1
+        trust_remote_code: true
+      model_name: "deepseek-ai/deepseek-coder-6.7b-instruct"
+
+evaluation:
+  benchmark:
+    - type: MBPP
+      prompt_type: "Instruction"
+      params:
+        num_samples: 1
+        temperature: 0.0
+        max_tokens: 1024
+        batch_size: 1
+        num_workers: 1
+        prompt_prefix: ""
+        prompt_suffix: ""
+        response_prefix: ""
+        response_suffix: ""
+  
+  output:
+    keep_chat: false
+    # path 會自動構建為 result/{model_name}/{benchmark_type}/
+    # 可選：使用 experiment_name 覆蓋模型名稱
