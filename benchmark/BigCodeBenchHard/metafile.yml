@@ -1,0 +1,4 @@
+Name: "BigCodeBenchHard"
+Description: "BigCodeBench Hard - A subset of challenging coding problems from BigCodeBench"
+Paper: "BigCodeBench: Benchmarking Code Generation with Diverse Function Calls and Complex Instructions"
+Repository: "https://huggingface.co/datasets/bigcode/bigcodebench-hard"

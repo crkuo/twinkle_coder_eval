@@ -10,14 +10,14 @@ from benchmark.base import Benchmark
 from sanitize import sanitize
 from utils import refine_text, stream_jsonl, read_metafile
 from engine.registry import register_benchmark
+from eval.execution import check_correctness
 
 info = read_metafile(os.path.dirname(os.path.abspath(__file__)))
 
 @register_benchmark('BigCodeBench')
 class BigCodeBench(Benchmark):
     name: str = info.get("Name")
-    fullset_path = os.path.join(env.DATASET_CACHE_FOLDER, "BigCodeBench", "BigCodeBench.jsonl")
-    subset_path = os.path.join(env.DATASET_CACHE_FOLDER, "BigCodeBench", "BigCodeBench_Hard.jsonl")
+    path = os.path.join(env.DATASET_CACHE_FOLDER, "BigCodeBench", "bigcodebench.jsonl")
 
     def __init__(self,
                  name: str = "BigCodeBench",
@@ -30,23 +30,55 @@ class BigCodeBench(Benchmark):
         self.name = name
         self.timeout = timeout
         self.prompt_type = prompt_type
-
-        if self.name == "BigCodeHard":
-            self.path = self.subset_path
-        elif self.name == "BigCodeBench":
-            self.path = self.fullset_path
-
         self.tasks = self.get_task()
 
     def prepare_dataset(self):
         """
-        Download dataset if not exists - placeholder implementation
+        Download and prepare the BigCodeBench dataset from Hugging Face.
         """
         if os.path.exists(self.path):
             return
-        # TODO: 實現實際的下載邏輯
-        print(f"Dataset not found at {self.path}. Please download BigCodeBench dataset.")
-        pass
+            
+        print(f"Preparing BigCodeBench dataset at {self.path}...")
+        
+        # Create directory if it doesn't exist
+        dataset_dir = os.path.dirname(self.path)
+        os.makedirs(dataset_dir, exist_ok=True)
+        
+        try:
+            # Load BigCodeBench dataset from Hugging Face
+            print("Loading BigCodeBench dataset from Hugging Face...")
+            from datasets import load_dataset
+            
+            dataset_loaded = False
+            try:
+                print("Trying to load bigcode/bigcodebench...")
+                # Try different splits for BigCodeBench
+                splits_to_try = ["v0.1.2", "v0.1.4", "v0.1.0_hf"]
+                dataset = None
+                for split in splits_to_try:
+                    try:
+                        dataset = load_dataset("bigcode/bigcodebench", split=split, trust_remote_code=True)
+                        break
+                    except:
+                        continue
+                if dataset is None:
+                    raise Exception("No valid split found for bigcode/bigcodebench")
+                
+                print(f"Loaded {len(dataset)} tasks from bigcode/bigcodebench")
+                dataset.to_json(self.path, lines=True, force_ascii=False)
+                dataset_loaded = True
+                
+            except Exception as e:
+                print(f"Failed to load bigcode/bigcodebench: {e}")
+            
+            if not dataset_loaded:
+                print("Warning: Failed to load BigCodeBench dataset from any source")
+                print("BigCodeBench benchmark will run with empty dataset")
+                
+        except Exception as e:
+            print(f"Warning: Failed to load BigCodeBench dataset: {e}")
+            print("BigCodeBench benchmark will run with empty dataset")
 
     def get_task(self):
         """
@@ -116,15 +148,7 @@ class BigCodeBench(Benchmark):
         """
         Takes the list of LM generations and evaluates them against the test cases
         """
-        if solution['task_id'] not in self.tasks:
-            return {
-                'task_id': solution['task_id'],
-                'completion_id': solution['completion_id'],
-                'passed': False,
-                'result': 'failed: task not found',
-                'solution': solution.get('solution', '')
-            }
-
+        assert solution['task_id'] in self.tasks
         task_data = self.tasks[solution['task_id']]
 
         code = (
@@ -133,27 +157,10 @@ class BigCodeBench(Benchmark):
             + solution['solution'] + "\n"
         )
         
-        # BigCodeBench 需要特殊的執行邏輯，暫時用 pass 跳過
-        # TODO: 實現 BigCodeBench 特定的測試執行邏輯
-        try:
-            # 這裡需要實現 BigCodeBench 的 unit test 執行
-            # from eval.unit_test import check_correctness
-            # result = check_correctness(solution['task_id'],
-            #                           solution['completion_id'],
-            #                           code,
-            #                           task_data["test"],
-            #                           self.timeout)
-            pass
-        except:
-            pass
-        
-        # 暫時返回假結果
-        result = {
-            'task_id': solution['task_id'],
-            'completion_id': solution['completion_id'],
-            'passed': False,
-            'result': 'not implemented: BigCodeBench evaluation pending',
-            'solution': solution.get('solution', '')
-        }
+        result = check_correctness(solution['task_id'],
+                                    solution['completion_id'],
+                                    code,
+                                    task_data["test"],
+                                    self.timeout)
         
         return result

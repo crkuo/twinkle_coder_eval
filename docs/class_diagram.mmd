@@ -56,11 +56,6 @@ classDiagram
         +release_memory()
     }
     
-    class MockGenerator {
-        +mock_solutions: Dict
-        +__init__(model_name, server_params)
-        +generate(prompt_set, num_samples, eos, response_prefix, response_suffix) List[Dict]
-    }
     
     %% Benchmark Layer Classes
     class Benchmark {
@@ -154,8 +149,7 @@ classDiagram
     
     %% Relationships
     Generator <|-- OpenaiGenerator : implements
-    Generator <|-- VllmGenerator : implements  
-    Generator <|-- MockGenerator : implements
+    Generator <|-- VllmGenerator : implements
     
     Benchmark <|-- MBPP : implements
     Benchmark <|-- HumanEval : implements

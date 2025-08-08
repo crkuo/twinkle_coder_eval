@@ -2,7 +2,9 @@ import os
 import argparse
 import numpy as np
 import hashlib
+import json
 from pathlib import Path
+from datetime import datetime
 
 # 設置環境變數
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -63,40 +65,11 @@ def dynamic_import_benchmark(benchmark_type: str):
             print(f"Failed to import {benchmark_type} benchmark from any path")
 
 
-def generate_config_signature(benchmark_params: dict) -> str:
+def generate_timestamp() -> str:
     """
-    基於關鍵參數生成配置簽名，用於區分不同的配置
+    生成時間戳字符串用於目錄命名
     """
-    # 選擇影響結果的關鍵參數
-    key_params = {
-        'num_samples': benchmark_params.get('num_samples', 1),
-        'temperature': benchmark_params.get('temperature', 0.0),
-        'max_tokens': benchmark_params.get('max_tokens', 1024),
-        'prompt_prefix': benchmark_params.get('prompt_prefix', ''),
-        'prompt_suffix': benchmark_params.get('prompt_suffix', ''),
-        'response_prefix': benchmark_params.get('response_prefix', ''),
-        'response_suffix': benchmark_params.get('response_suffix', ''),
-    }
-    
-    # 生成簽名字符串
-    signature_parts = []
-    for key, value in sorted(key_params.items()):
-        if value:  # 只包含非空值
-            if isinstance(value, str) and value.strip():
-                signature_parts.append(f"{key}={value}")
-            elif isinstance(value, (int, float)) and value != 0:
-                signature_parts.append(f"{key}={value}")
-    
-    if not signature_parts:
-        return "default"
-    
-    signature_str = "_".join(signature_parts)
-    
-    # 如果簽名太長，使用 hash
-    if len(signature_str) > 50:
-        return hashlib.md5(signature_str.encode()).hexdigest()[:8]
-    
-    return signature_str
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
 def main():
@@ -126,23 +99,33 @@ def main():
         # 從 params 中提取參數
         benchmark_params = benchmark_config.get('params', {})
         
-        # 構建輸出路徑，加入配置簽名以區分不同參數
+        # 構建輸出路徑，使用時間戳
         experiment_name = config.get('experiment_name') or config.model.backend[0].model_name
-        config_signature = generate_config_signature(benchmark_params)
+        timestamp = generate_timestamp()
         
-        # 生成唯一的 benchmark 目錄名
-        if config_signature == "default":
-            benchmark_dir = benchmark_type
-        else:
-            benchmark_dir = f"{benchmark_type}_{config_signature}"
-        
-        save_path = os.path.join('result', experiment_name, benchmark_dir)
+        # 生成基於時間戳的目錄名
+        save_path = os.path.join('result', experiment_name, timestamp)
         if args.save_path:
-            save_path = os.path.join(args.save_path, benchmark_dir)
+            save_path = os.path.join(args.save_path, timestamp)
         
         os.makedirs(save_path, exist_ok=True)
         print(f"Results will be saved to: {save_path}")
-        print(f"Config signature: {config_signature}")
+        print(f"Timestamp: {timestamp}")
+        
+        # 保存配置文件到輸出目錄
+        config_save_path = os.path.join(save_path, "config.json")
+        with open(config_save_path, 'w', encoding='utf-8') as f:
+            # 將配置轉換為可序列化的字典
+            config_dict = {
+                'model': dict(config.model),
+                'evaluation': dict(config.evaluation),
+                'experiment_name': config.get('experiment_name', experiment_name),
+                'benchmark_type': benchmark_type,
+                'benchmark_params': benchmark_params,
+                'timestamp': timestamp
+            }
+            json.dump(config_dict, f, indent=2, ensure_ascii=False)
+        print(f"Config saved to: {config_save_path}")
         
         # 使用 registry 構建 benchmark
         task = BENCHMARKS.build(benchmark_config)

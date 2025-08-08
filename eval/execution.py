@@ -8,7 +8,7 @@ import contextlib
 import faulthandler
 import multiprocessing
 
-from typing import Optional, Callable, Dict
+from typing import Optional, Callable, Dict, Tuple, Any
 
 
 # WARNING
@@ -30,11 +30,22 @@ def check_correctness(task_id: int,
     """
     Evaluates the functional correctness of a completion by running the test
     suite provided in the problem. 
+    
+    Automatically detects Windows and uses appropriate execution method.
 
     :param completion_id: an optional completion ID so we can match
         the results later even if execution finishes asynchronously.
     """
-
+    
+    # Check if we're on Windows and use Windows-compatible version
+    if platform.uname().system == 'Windows':
+        try:
+            from eval.execution_windows import check_correctness_windows
+            return check_correctness_windows(task_id, completion_id, solution, time_out)
+        except ImportError:
+            print("Warning: Windows execution module not found, falling back to standard method")
+    
+    # Original Unix/Linux implementation
     def unsafe_execute():
 
         with create_tempdir():

@@ -11,7 +11,13 @@ import numpy as np
 
 from typing import Dict, List, Union, Iterable
 from collections import defaultdict
-from transformers import AutoTokenizer
+# Conditional import for transformers - only used in vllm backend
+try:
+    from transformers import AutoTokenizer
+    HAS_TRANSFORMERS = True
+except ImportError:
+    AutoTokenizer = None
+    HAS_TRANSFORMERS = False
 
 python_pattern = r"```python[ \t]*[\r\n]+(.*?)[ \t]*[\r\n]+```"
 python_re = re.compile(python_pattern, re.DOTALL | re.IGNORECASE)
@@ -36,9 +42,21 @@ def format_test_example(q, tests, code: str=None):
     return prompt
 
 def make_chat_prompt(prompt: str,
-                     tokenizer: AutoTokenizer,
+                     tokenizer = None,
                      response_prefix: str = ""
                     ) -> str:
+    """
+    Create a chat prompt. This function is primarily used by the vllm backend.
+    For other backends, it simply returns the original prompt with response_prefix.
+    """
+    # If no tokenizer provided (non-vllm backends), return simple format
+    if tokenizer is None or not HAS_TRANSFORMERS:
+        return response_prefix + prompt
+    
+    # Check if tokenizer has the expected attributes (for vllm backend)
+    if not hasattr(tokenizer, 'chat_template'):
+        return response_prefix + prompt
+    
     # directly return prompt if it does not have a tokenizer.chat_template
     if tokenizer.chat_template:
 
@@ -59,7 +77,11 @@ def make_chat_prompt(prompt: str,
             add_generation_prompt = True
         ) + response_prefix
         
-    return prompt[len(tokenizer.bos_token):] if prompt.startswith(tokenizer.bos_token) else prompt
+    # Handle bos_token if it exists
+    if hasattr(tokenizer, 'bos_token') and tokenizer.bos_token and prompt.startswith(tokenizer.bos_token):
+        return prompt[len(tokenizer.bos_token):]
+    
+    return prompt
 
 
 def stream_jsonl(filename: str) -> Iterable[Dict]:

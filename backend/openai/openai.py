@@ -5,12 +5,11 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.extend([os.path.dirname(ROOT), os.path.dirname(os.path.dirname(ROOT))])
 
 from openai import OpenAI
-import httpx
 from tqdm import tqdm
 from typing import List, Dict
 
 from backend.base import Generator
-from utils import make_chat_prompt, refine_text
+from utils import refine_text
 from engine.registry import register_backend
 
 @register_backend('openai')
@@ -104,8 +103,13 @@ class OpenaiGenerator(Generator):
                             create_params["stop"] = self.eos
                         
                         response = self.client.chat.completions.create(**create_params)
+                        # print(f"Chat API Response: {response}")
                         
-                        generation = response.choices[0].message.content
+                        # 處理異常的 API 響應格式，優先使用 reasoning_content
+                        message = response.choices[0].message
+                        generation = message.content
+                        
+                        print(f"Generated content: '{generation}'")
                         
                         # 組裝結果格式，與 VllmGenerator 保持一致
                         result = {
@@ -129,8 +133,9 @@ class OpenaiGenerator(Generator):
                             complete_params["stop"] = self.eos
                             
                         response = self.client.completions.create(**complete_params)
-                        
+                        print(f"Completion API Response: {response}")
                         generation = response.choices[0].text
+                        print(f"Generated text: '{generation}'")
                         
                         # 組裝結果格式
                         result = {

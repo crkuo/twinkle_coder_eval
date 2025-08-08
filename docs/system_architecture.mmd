@@ -14,7 +14,6 @@ graph TB
         BACKEND_BASE[["🏗️ Generator Base<br/>backend/base.py"]]
         OPENAI[["🤖 OpenAI Backend<br/>backend/openai/<br/>• API Integration<br/>• Chat/Completion<br/>• Error Handling"]]
         VLLM[["⚡ vLLM Backend<br/>backend/vllm/<br/>• High Performance<br/>• Local Models<br/>• Batch Processing"]]
-        MOCK[["🎭 Mock Backend<br/>backend/mock/<br/>• Testing Support<br/>• CI/CD Integration"]]
         CUSTOM_BACKEND[["🔧 Custom Backend<br/>Extensible..."]]
     end
     
@@ -53,7 +52,6 @@ graph TB
     %% Backend Registration
     BACKEND_BASE --> OPENAI
     BACKEND_BASE --> VLLM
-    BACKEND_BASE --> MOCK
     BACKEND_BASE --> CUSTOM_BACKEND
     
     %% Benchmark Registration  
@@ -86,7 +84,7 @@ graph TB
     
     class CLI,CONFIG userLayer
     class REGISTRY,CONFIGMGR,ORCHESTRATOR engineLayer
-    class BACKEND_BASE,OPENAI,VLLM,MOCK,CUSTOM_BACKEND backendLayer
+    class BACKEND_BASE,OPENAI,VLLM,CUSTOM_BACKEND backendLayer
     class BENCHMARK_BASE,MBPP,HUMANEVAL,BIGCODEBENCH,LEETCODE,CUSTOM_BENCHMARK benchmarkLayer
     class SANITIZER,EXECUTOR,METRICS executionLayer
     class CACHE,RESULTS,METADATA dataLayer

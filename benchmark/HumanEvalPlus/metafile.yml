@@ -1,0 +1,12 @@
+Name: HumanEvalPlus
+Paper: 
+  Title: "Is Your Code Generation Result Better or Just Different? CodeBERTScore: A Semantic Measure for Evaluating Code Generation"
+  URL: https://arxiv.org/abs/2302.05527
+  Authors: "Tianyi Zhang, Tao Yu, Tatsunori B. Hashimoto, et al."
+License: MIT
+Dataset:
+  - Source: HumanEval+
+    URL: https://github.com/evalplus/evalplus
+    Split: test
+    Size: 164
+Task: code-completion

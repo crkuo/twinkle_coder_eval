@@ -30,7 +30,7 @@ The framework follows a **Plugin-based Architecture** with three main components
 │  ┌─────────────────┐│                │ ┌──────────────┐ │
 │  │ OpenAI Backend  ││                │ │ MBPP         │ │
 │  │ vLLM Backend    ││                │ │ HumanEval    │ │
-│  │ Mock Backend    ││                │ │ BigCodeBench │ │
+│  │                 ││                │ │ BigCodeBench │ │
 │  └─────────────────┘│                │ │ LeetCode     │ │
 └─────────────────────┘                │ │ MBPPPlus     │ │
                                        │ └──────────────┘ │
@@ -81,8 +81,7 @@ refactor/
 ├── backend/              # Model inference backends
 │   ├── base.py          # Abstract base class
 │   ├── openai/          # OpenAI API backend
-│   ├── vllm/            # vLLM high-performance backend
-│   └── mock/            # Testing mock backend
+│   └── vllm/            # vLLM high-performance backend
 ├── benchmark/           # Evaluation benchmarks
 │   ├── base.py         # Abstract benchmark class
 │   ├── MBPP/           # Mostly Basic Python Problems
@@ -109,7 +108,7 @@ refactor/
 
 ### 🎯 Backend System
 - **Purpose**: Unified interface for different LLM inference engines
-- **Implementations**: OpenAI API, vLLM, Mock (testing)
+- **Implementations**: OpenAI API, vLLM
 - **Key Features**:
   - Automatic batch processing
   - Error handling and retries
@@ -237,12 +236,12 @@ model:
 
 2. **Run Tests**:
    ```bash
-   python tools/run_evaluation.py configs/test_mock_backend.yml
+   python tools/run_evaluation.py configs/test_mbpp_config.yml
    ```
 
 3. **Add Components**: Follow extension patterns above
 
-4. **Validate**: Test with mock backend before real models
+4. **Validate**: Test with simple configurations before complex models
 
 5. **Document**: Update configuration examples and documentation
 

@@ -33,13 +33,47 @@ class MBPPPlus(Benchmark):
 
     def prepare_dataset(self):
         """
-        Download dataset if not exists
+        Download and prepare the MBPPPlus dataset from Hugging Face.
         """
         if os.path.exists(self.path):
             return
-        # TODO: 實現實際的下載邏輯
-        print(f"Dataset not found at {self.path}. Please download MBPPPlus dataset.")
-        pass
+            
+        print(f"Preparing MBPPPlus dataset at {self.path}...")
+        
+        # Create directory if it doesn't exist
+        dataset_dir = os.path.dirname(self.path)
+        os.makedirs(dataset_dir, exist_ok=True)
+        
+        try:
+            # Load MBPPPlus dataset from Hugging Face
+            print("Loading MBPPPlus dataset from Hugging Face...")
+            from datasets import load_dataset
+            # Try MBPPPlus dataset sources
+            dataset_names = [
+                "evalplus/mbppplus"
+            ]
+            
+            dataset_loaded = False
+            for dataset_name in dataset_names:
+                try:
+                    print(f"Trying to load {dataset_name}...")
+                    dataset = load_dataset(dataset_name, split="test", trust_remote_code=True)
+                    
+                    print(f"Loaded {len(dataset)} tasks from {dataset_name}")
+                    dataset.to_json(self.path, lines=True, force_ascii=False)
+                    dataset_loaded = True
+                    
+                except Exception as e:
+                    print(f"Failed to load {dataset_name}: {e}")
+                    continue
+            
+            if not dataset_loaded:
+                print("Warning: Failed to load MBPPPlus dataset from any source")
+                print("MBPPPlus benchmark will run with empty dataset")
+                
+        except Exception as e:
+            print(f"Warning: Failed to load MBPPPlus dataset: {e}")
+            print("MBPPPlus benchmark will run with empty dataset")
 
     def get_task(self):
         """
@@ -76,7 +110,7 @@ class MBPPPlus(Benchmark):
 
         prompts = []
         for task_id, task_data in self.tasks.items():
-            prompt = self.format_prompt(task_data["text"], task_data["test_list"][0])
+            prompt = self.format_prompt(task_data["prompt"], task_data["test_list"][0])
             prompts.append(
                 dict(
                     task_id = task_id,

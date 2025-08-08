@@ -205,7 +205,13 @@ BACKENDS = Registry('backend', locations=[
 ])
 BENCHMARKS = Registry('benchmark', locations=[
     'benchmark.MBPP.MBPP',
-    'benchmark.TestMBPP.TestMBPP'
+    'benchmark.MBPPPlus.MBPPPlus',
+    'benchmark.TestMBPP.TestMBPP',
+    'benchmark.HumanEval.HumanEval',
+    'benchmark.HumanEvalPlus.HumanEvalPlus',
+    'benchmark.LeetCode.LeetCode',
+    'benchmark.BigCodeBench.BigCodeBench',
+    'benchmark.BigCodeBenchHard.BigCodeBenchHard'
 ])
 EVALUATORS = Registry('evaluator')
 MODELS = Registry('model')

@@ -33,13 +33,55 @@ class LeetCode(Benchmark):
 
     def prepare_dataset(self):
         """
-        Download dataset if not exists
+        Download and prepare the LeetCode dataset from Hugging Face.
         """
         if os.path.exists(self.path):
             return
-        # TODO: 實現實際的下載邏輯
-        print(f"Dataset not found at {self.path}. Please download LeetCode dataset.")
-        pass
+            
+        print(f"Preparing LeetCode dataset at {self.path}...")
+        
+        # Create directory if it doesn't exist
+        dataset_dir = os.path.dirname(self.path)
+        os.makedirs(dataset_dir, exist_ok=True)
+        
+        try:
+            # Try loading from Hugging Face
+            print("Loading LeetCode dataset from Hugging Face...")
+
+            
+            # Try different possible dataset names for LeetCode
+            dataset_names = [
+                "TechxGenus/LeetCode-Contest"
+            ]
+            
+            dataset_loaded = False
+            for dataset_name in dataset_names:
+                try:
+                    from huggingface_hub import hf_hub_download
+                    print(f"Trying to download from {dataset_name}...")
+                    
+                    # Download the dataset file
+                    downloaded_file = hf_hub_download(
+                        repo_id=dataset_name, 
+                        filename=os.path.basename(self.path), 
+                        local_dir=os.path.dirname(self.path),
+                        repo_type="dataset"
+                    )
+                    
+                    print(f"Successfully downloaded to {downloaded_file}")
+                    dataset_loaded = True
+                    break
+                    
+                except Exception as e:
+                    print(f"Failed to load {dataset_name}: {e}")
+                    continue
+            
+            if not dataset_loaded:
+                raise Exception("No suitable dataset found")
+                
+        except Exception as e:
+            print(f"Warning: Failed to load LeetCode dataset: {e}")
+            print("LeetCode benchmark will run with empty dataset")
 
     def get_task(self):
         """
