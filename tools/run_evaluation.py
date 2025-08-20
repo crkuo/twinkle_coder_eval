@@ -19,9 +19,9 @@ from typing import Callable, List
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # 導入 refactor 模組
-from utils import refine_text, write_jsonl, group_and_count, estimate_pass_at_k
+from tools.utils import refine_text, write_jsonl, group_and_count, estimate_pass_at_k
 from engine.registry import BACKENDS, BENCHMARKS
-from engine.config import Config
+from refactor.engine.config import Config
 
 
 def multi_process_function(function: Callable,
@@ -72,6 +72,68 @@ def generate_timestamp() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
+def generate_config_signature(config_dict: dict, max_length: int = 16) -> str:
+    """
+    根據配置參數生成加密的目錄名稱
+    使用 SHA256 哈希以避免過長的目錄名
+    
+    Args:
+        config_dict: 配置參數字典
+        max_length: 生成簽名的最大長度
+        
+    Returns:
+        加密的配置簽名字符串
+    """
+    # 提取關鍵參數用於生成簽名
+    key_params = {}
+    
+    # 模型相關參數
+    if 'model' in config_dict:
+        model_config = config_dict['model']
+        if 'backend' in model_config and len(model_config['backend']) > 0:
+            backend = model_config['backend'][0]
+            key_params['model_name'] = backend.get('model_name', '')
+            key_params['backend_type'] = backend.get('type', '')
+    
+    # 評估相關參數
+    if 'evaluation' in config_dict:
+        eval_config = config_dict['evaluation']
+        if 'benchmark' in eval_config and len(eval_config['benchmark']) > 0:
+            benchmark = eval_config['benchmark'][0]
+            key_params['benchmark_type'] = benchmark.get('type', '')
+            
+            # 基準測試參數
+            if 'params' in benchmark:
+                params = benchmark['params']
+                # 只包含影響結果的關鍵參數
+                for key in ['num_samples', 'temperature', 'max_tokens', 'top_p', 'top_k']:
+                    if key in params:
+                        key_params[key] = params[key]
+    
+    # 實驗名稱
+    if 'experiment_name' in config_dict:
+        key_params['experiment_name'] = config_dict['experiment_name']
+        
+    # 基準測試參數
+    if 'benchmark_params' in config_dict:
+        benchmark_params = config_dict['benchmark_params']
+        for key in ['num_samples', 'temperature', 'max_tokens', 'top_p', 'top_k']:
+            if key in benchmark_params:
+                key_params[key] = benchmark_params[key]
+    
+    # 創建可重現的參數字符串
+    param_str = json.dumps(key_params, sort_keys=True, separators=(',', ':'))
+    
+    # 生成 SHA256 哈希
+    hash_obj = hashlib.sha256(param_str.encode('utf-8'))
+    hash_hex = hash_obj.hexdigest()
+    
+    # 取前 max_length 個字符作為簽名
+    signature = hash_hex[:max_length]
+    
+    return signature
+
+
 def main():
     parser = argparse.ArgumentParser(description='Run evaluation using YAML config')
     parser.add_argument('config', help='Path to YAML config file')
@@ -99,30 +161,42 @@ def main():
         # 從 params 中提取參數
         benchmark_params = benchmark_config.get('params', {})
         
-        # 構建輸出路徑，使用時間戳
+        # 構建輸出路徑，使用加密的參數簽名
         experiment_name = config.get('experiment_name') or config.model.backend[0].model_name
-        timestamp = generate_timestamp()
         
-        # 生成基於時間戳的目錄名
-        save_path = os.path.join('result', experiment_name, timestamp)
+        # 準備配置字典用於生成簽名
+        config_dict_for_signature = {
+            'model': dict(config.model),
+            'evaluation': dict(config.evaluation),
+            'experiment_name': config.get('experiment_name', experiment_name),
+            'benchmark_type': benchmark_type,
+            'benchmark_params': benchmark_params
+        }
+        
+        # 生成基於參數的加密目錄名
+        config_signature = generate_config_signature(config_dict_for_signature)
+        directory_name = f"{benchmark_type}_{config_signature}"
+        
+        save_path = os.path.join('result', experiment_name, directory_name)
         if args.save_path:
-            save_path = os.path.join(args.save_path, timestamp)
+            save_path = os.path.join(args.save_path, directory_name)
         
         os.makedirs(save_path, exist_ok=True)
         print(f"Results will be saved to: {save_path}")
-        print(f"Timestamp: {timestamp}")
+        print(f"Config signature: {config_signature}")
         
         # 保存配置文件到輸出目錄
         config_save_path = os.path.join(save_path, "config.json")
         with open(config_save_path, 'w', encoding='utf-8') as f:
-            # 將配置轉換為可序列化的字典
+            # 將配置轉換為可序列化的字典，添加簽名信息
             config_dict = {
                 'model': dict(config.model),
                 'evaluation': dict(config.evaluation),
                 'experiment_name': config.get('experiment_name', experiment_name),
                 'benchmark_type': benchmark_type,
                 'benchmark_params': benchmark_params,
-                'timestamp': timestamp
+                'config_signature': config_signature,
+                'timestamp': generate_timestamp()  # 仍保留時間戳用於追蹤
             }
             json.dump(config_dict, f, indent=2, ensure_ascii=False)
         print(f"Config saved to: {config_save_path}")
@@ -145,7 +219,7 @@ def main():
         print(f"Loaded model: {model_name}")
         
         # 獲取提示
-        prompts = task.get_prompt()
+        prompts = task.get_prompts()
         print(f"Generated {len(prompts)} prompts")
         
         # 處理提示前後綴（從 params 中獲取）
