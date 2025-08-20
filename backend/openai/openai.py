@@ -9,60 +9,129 @@ from tqdm import tqdm
 from typing import List, Dict
 
 from backend.base import Generator
-from utils import refine_text
+from tools.utils import refine_text
 from engine.registry import register_backend
-
+import time
+import json
 @register_backend('openai')
 class OpenaiGenerator(Generator):
     def __init__(self,
                  model_name: str,
-                 server_params: dict,
-                 model_type: str = "Chat",
-                 batch_size : int = 1,
-                 temperature : float = 0.0,
-                 max_tokens : int = 1024,
-                 eos: List[str] = None,
-                 **kwargs
+                 arguments: dict,
+                 model_type: str = "Chat"
                ) -> None:
         super().__init__(model_name)
-
-        print("Initializing OpenAI client: {} ...".format(model_name))
-        self.model_name = model_name
-        self.model_type = model_type
-        self.batch_size = batch_size
-        self.temperature = temperature
-        self.max_tokens = max_tokens
-        self.eos = eos
         
         # 初始化 OpenAI 客戶端
         self.client = OpenAI(
-            **server_params
+            **arguments
         )
-        
-        print(f"OpenAI client initialized with base_url: {server_params.get('base_url')}")
-        print(f"Model: {model_name}")
-        print(f"Model type: {model_type}")
+        self.model_type  = model_type
+        print(f"OpenAI client initialized with base_url: {arguments.get('base_url')}")
 
+        
     def is_chat(self) -> bool:
         return self.model_type == "Chat"
 
+    def generate_with_stream_auto_continue(self, prompt, create_params, max_rounds=20):
+        """
+        串流 + 自動續寫。
+        規則：
+        - 若 finish_reason == "length"，就把目前已產生文字當成 assistant 回到對話裡，接著讓 user 說「Please continue.」
+        - 最多續寫 max_rounds 輪（包含第 1 輪）
+        """
+        s = time.time()
+        base_messages = [{"role": "user", "content": prompt}]
+        current_messages = list(base_messages)
+        full_text = ""
+        final_finish_reason = "stop"
+        num_response = 0
+        for round_idx in range(max_rounds):
+            try:
+                current_params = create_params.copy()
+                current_params["messages"] = current_messages
+                
+                response = self.client.chat.completions.create(**current_params)
+                choice = response.choices[0]
+                message = choice.message
+                content = message.content if message.content is not None else ""
+                finish_reason = choice.finish_reason
+                
+                full_text += content
+                final_finish_reason = finish_reason
+                num_response += 1
+                if finish_reason != "length":
+                    # 正常完成（"stop" 或其他），結束
+                    break
+                
+                # 被切斷：把已產生片段放回歷史，再要求繼續
+                current_messages += [
+                    {"role": "assistant", "content": content if content else ""},
+                    {"role": "user", "content": "Please continue where you left off, without repeating."},
+                ]
+                
+            except Exception as e:
+                print(f"串流獲取回應時出錯 (輪次 {round_idx + 1}): {e}")
+                final_finish_reason = 'error'
+                break
+        e = time.time()
+        result = {
+            "generation": full_text,
+            "finish_reason": final_finish_reason,
+            "num_response": num_response,
+            "time_elapsed": e-s
+        }
+        return result
+    def generate_with_normal_mode(self, prompt:str, create_params:dict, max_rounds=20):
+        s = time.time()
+        messages = [{"role": "user", "content": prompt}]
+        full_text = ""
+        final_finish_reason = "stop"
+        finish_reason = None
+        num_response = 0
+        
+        for round_idx in range(max_rounds):
+            try:
+                create_params['messages'] = messages
+                response = self.client.chat.completions.create(**create_params)
+                choice = response.choices[0]
+                message = choice.message
+                finish_reason = choice.finish_reason
+                final_finish_reason = finish_reason
+                text = message.content if message.content is not None else ""
+                full_text += text
+                num_response += 1
+                if finish_reason != 'length':
+                    break
+                messages += [
+                    {"role": "assistant", "content": text},
+                    {"role": "user", "content": "Please continue where you left off, without repeating."},
+                ]
+            except Exception as e:
+                import traceback
+                print(f"獲取回應時出錯 (輪次 {round_idx + 1}): {e}")
+                print(traceback.format_exc())
+                final_finish_reason = 'error'
+                break
+        e = time.time()
+        result = {
+            "generation": full_text,
+            "finish_reason": final_finish_reason,
+            "num_response": num_response,
+            "time_elapsed": e-s
+        }
+        return result
+            
 
     def generate(self,
                  prompt_set: List[Dict],
                  num_samples: int = 200,
                  eos: List[str] = None,
                  response_prefix: str = "",
-                 response_suffix: str = ""
+                 response_suffix: str = "",
+                 batch_size = 1,
+                 generate_args: dict = ""
                 ) -> List[str]:
-
-        # 如果是 Chat 模式，構建 chat prompt（但這裡直接使用原始 prompt）
-        if self.is_chat():
-            print("Using Chat Completion API")
-        else:
-            print("Using Text Completion API")
-        
-        print(f"First prompt: {prompt_set[0]['prompt'] if prompt_set else 'None'}")
-        
         # 構建樣本提示
         sample_prompts = []
         for prompt_data in prompt_set:
@@ -73,10 +142,13 @@ class OpenaiGenerator(Generator):
         assert all(sample_prompts[i:i + num_samples] == [sample_prompts[i]] * num_samples for i in range(0, len(sample_prompts), num_samples))
 
         generations = []
-
-        for batch_start in tqdm(range(0, len(sample_prompts), self.batch_size)):
-            batch = sample_prompts[batch_start : batch_start + self.batch_size]
-            
+        create_params = generate_args
+        create_params.update({"model": self.model_name})
+        if eos and len(eos) > 0 and isinstance(eos, list):
+            create_params["stop"] = eos
+        use_stream = create_params.get('stream', False)
+        for batch_start in range(0, len(sample_prompts), batch_size):
+            batch = sample_prompts[batch_start : batch_start + batch_size]
             batch_generations = []
             for prompt_data in batch:
                 try:
@@ -84,67 +156,25 @@ class OpenaiGenerator(Generator):
                     task_id = prompt_data['task_id']
                     completion_id = batch_start + len(batch_generations)
                     
-                    full_prompt = response_prefix + prompt_text
-                    
-                    if self.is_chat():
-                        # 使用 Chat Completion API
-                        messages = [{"role": "user", "content": full_prompt}]
-                        
-                        # 過濾 None 值避免 API 錯誤
-                        create_params = {
-                            "model": self.model_name,
-                            "messages": messages,
-                            "temperature": self.temperature,
-                            "max_tokens": self.max_tokens
-                        }
-                        
-                        # 只有當 stop 不是 None 且不為空時才加入
-                        if self.eos and len(self.eos) > 0:
-                            create_params["stop"] = self.eos
-                        
-                        response = self.client.chat.completions.create(**create_params)
-                        # print(f"Chat API Response: {response}")
-                        
-                        # 處理異常的 API 響應格式，優先使用 reasoning_content
-                        message = response.choices[0].message
-                        generation = message.content
-                        
-                        print(f"Generated content: '{generation}'")
-                        
-                        # 組裝結果格式，與 VllmGenerator 保持一致
-                        result = {
-                            'task_id': task_id,
-                            'completion_id': completion_id,
-                            'completion': refine_text(generation) if generation is not None else ""
-                        }
-                        batch_generations.append(result)
-                        
+                    full_prompt = response_prefix + prompt_text +response_suffix
+                    if use_stream:
+                        generation_result = self.generate_with_stream_auto_continue(full_prompt, create_params)
                     else:
-                        # 使用 Text Completion API
-                        complete_params = {
-                            "model": self.model_name,
-                            "prompt": full_prompt,
-                            "temperature": self.temperature,
-                            "max_tokens": self.max_tokens
-                        }
-                        
-                        # 只有當 stop 不是 None 且不為空時才加入
-                        if self.eos and len(self.eos) > 0:
-                            complete_params["stop"] = self.eos
-                            
-                        response = self.client.completions.create(**complete_params)
-                        print(f"Completion API Response: {response}")
-                        generation = response.choices[0].text
-                        print(f"Generated text: '{generation}'")
-                        
-                        # 組裝結果格式
-                        result = {
-                            'task_id': task_id,
-                            'completion_id': completion_id,
-                            'completion': refine_text(generation)
-                        }
-                        batch_generations.append(result)
-                        
+                        generation_result = self.generate_with_normal_mode(full_prompt, create_params)
+                    generation = generation_result.get("generation", "")
+                    finish_reason = generation_result.get("finish_reason", "")
+                    time_elapsed = generation_result.get("time_elapsed", 0)
+                    num_requests = generation_result.get("num_response", 1)
+                    result = {
+                        'task_id': task_id,
+                        'completion_id': completion_id,
+                        'completion': refine_text(generation) if generation else "",
+                        'finish_reason': finish_reason,
+                        'time_elapsed': time_elapsed,
+                        'num_requests': num_requests
+                    }
+                    batch_generations.append(result)
+                    
                 except Exception as e:
                     print(f"API 調用錯誤: {e}")
                     error_result = {
@@ -153,7 +183,7 @@ class OpenaiGenerator(Generator):
                         'completion': f"# Error: {str(e)}"
                     }
                     batch_generations.append(error_result)
-
+                    
             generations.extend(batch_generations)
 
         grouped_generations = [generations[i:i + num_samples] for i in range(0, len(generations), num_samples)]

@@ -18,7 +18,7 @@ from vllm.distributed.parallel_state import destroy_distributed_environment, des
 
 from backend.base import Generator
 from engine.registry import register_backend
-from utils import make_chat_prompt, refine_text
+from tools.utils import make_chat_prompt, refine_text
 
 @register_backend('vllm')
 class VllmGenerator(Generator):
@@ -63,7 +63,8 @@ class VllmGenerator(Generator):
                          tokenizer = None,
                          max_model_len = self.max_tokens,
                          tensor_parallel_size = self.num_gpus,
-                         trust_remote_code = self.trust_remote_code)
+                         trust_remote_code = self.trust_remote_code, 
+                         **kwargs)
         
         self.model.set_tokenizer(tokenizer = self.tokenizer)
 

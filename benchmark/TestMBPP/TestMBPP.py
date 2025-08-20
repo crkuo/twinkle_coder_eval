@@ -7,9 +7,9 @@ import env
 from typing import List
 
 from benchmark.base import Benchmark
-from sanitize import sanitize
+from tools.sanitize import sanitize
 from eval.execution import check_correctness
-from utils import refine_text, stream_jsonl, read_metafile
+from tools.utils import refine_text, stream_jsonl, read_metafile
 from engine.registry import register_benchmark
 
 info = read_metafile(os.path.dirname(os.path.abspath(__file__)))
@@ -23,7 +23,7 @@ class TestMBPP(Benchmark):
     few_shots_end = 4
 
     test_start = 10
-    test_end = 11  # 只測試第一筆資料 (task_id=10)
+    test_end = 20  # 只測試第一筆資料 (task_id=10)
 
     def __init__(self,
                  name:str = "MBPP",
@@ -100,7 +100,7 @@ class TestMBPP(Benchmark):
 
         return '\n'.join(few_shots_prompts)
     
-    def get_prompt(self):
+    def get_prompts(self):
         """
         Builds the prompt for the LM to generate from.
         """

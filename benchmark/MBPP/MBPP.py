@@ -7,9 +7,9 @@ import env
 from typing import List
 
 from benchmark.base import Benchmark
-from sanitize import sanitize
+from tools.sanitize import sanitize
 from eval.execution import check_correctness
-from utils import refine_text, stream_jsonl, read_metafile
+from tools.utils import refine_text, stream_jsonl, read_metafile
 from engine.registry import register_benchmark
 
 info = read_metafile(os.path.dirname(os.path.abspath(__file__)))
@@ -28,7 +28,8 @@ class MBPP(Benchmark):
     def __init__(self,
                  name:str = "MBPP",
                  timeout:float = 3.0,
-                 prompt_type:str = "Chat"): 
+                 prompt_type:str = "Instruct",
+                 **kwargs): 
         super().__init__()
         
         self.name = name
@@ -101,7 +102,7 @@ class MBPP(Benchmark):
 
         return '\n'.join(few_shots_prompts)
     
-    def get_prompt(self):
+    def get_prompts(self):
         """
         Builds the prompt for the LM to generate from.
         """
@@ -123,11 +124,11 @@ class MBPP(Benchmark):
         """
         Postprocess the generations.
         """
-
         return dict(
             task_id = generation['task_id'],
             completion_id = generation['completion_id'],
-            solution = sanitize(generation['completion'])
+            solution = sanitize(generation['completion']),
+            raw = generation['completion']
         )
     
     def process_results(self, solution):

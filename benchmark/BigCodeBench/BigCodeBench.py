@@ -7,8 +7,8 @@ import env
 from typing import List, Literal
 
 from benchmark.base import Benchmark
-from sanitize import sanitize
-from utils import refine_text, stream_jsonl, read_metafile
+from tools.sanitize import sanitize
+from tools.utils import refine_text, stream_jsonl, read_metafile
 from engine.registry import register_benchmark
 from eval.execution import check_correctness
 
@@ -100,7 +100,7 @@ class BigCodeBench(Benchmark):
         
         return tasks
     
-    def get_prompt(self):
+    def get_prompts(self):
         """
         Builds the prompt for the LM to generate from.
         """

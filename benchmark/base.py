@@ -53,7 +53,7 @@ class Benchmark(ABC):
 
 
     @abstractmethod
-    def get_prompt(self, doc):
+    def get_prompts(self, doc):
         """Builds the prompt for the LM to generate from.
         :param doc: dict[str: str]
             sample from the test dataset
