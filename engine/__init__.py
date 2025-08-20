@@ -1,23 +1,9 @@
-"""
-簡化版 Engine 模組
-提供配置管理和註冊系統
-"""
-from .config import Config, ConfigDict, DictAction
-from .registry import (
-    Registry, 
-    BACKENDS, BENCHMARKS, EVALUATORS, MODELS, DATASETS,
-    register_backend, register_benchmark, register_evaluator, 
-    register_model, register_dataset,
-    build_from_cfg
-)
+# Engine: Standalone ConfigDict Implementation
+# Extracted from MMEngine for independent use
 
-__all__ = [
-    # Config
-    'Config', 'ConfigDict', 'DictAction',
-    
-    # Registry
-    'Registry', 'build_from_cfg',
-    'BACKENDS', 'BENCHMARKS', 'EVALUATORS', 'MODELS', 'DATASETS',
-    'register_backend', 'register_benchmark', 'register_evaluator',
-    'register_model', 'register_dataset'
-]
+from engine.config_dict import ConfigDict
+from engine.lazy import LazyObject, LazyAttr
+from .config import Config
+
+__version__ = "1.0.0"
+__all__ = ["ConfigDict", "LazyObject", "LazyAttr", "Config"]
