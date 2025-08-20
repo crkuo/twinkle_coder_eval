@@ -160,7 +160,7 @@ evaluation:
    
    @register_benchmark('MyBenchmark')
    class MyBenchmark(Benchmark):
-       def get_prompt(self):
+       def get_prompts(self):
            # Return list of prompt dictionaries
            pass
            
