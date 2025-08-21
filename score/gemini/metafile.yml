@@ -1,0 +1,24 @@
+Collections:
+  - Name: Gemini
+    Paper:
+      URL: https://storage.googleapis.com/deepmind-media/gemini/gemini_v2_5_report.pdf
+      Title: 'Gemini 2.5: Pushing the Frontier with Advanced Reasoning, Multimodality, Long Context, and Next Generation Agentic Capabilities.'
+
+Models:
+  - Name: "gemini-2.5-flash"
+    Alias: Gemini
+    In Collection: Gemini
+    Config: configs/kie/sdmgr/sdmgr_unet16_60e_wildreceipt.py
+    Results:
+      - Task: Code Generation
+        Benchmark: LiveCodeBench
+        Version: 5
+        Metrics:
+          acc: 0.639
+      - Task: Code Editing
+        Benchmark: Aider Polyglot
+        Metrics:
+          whole:
+            acc: 0.619
+          diff-fenced:
+            acc: 0.567

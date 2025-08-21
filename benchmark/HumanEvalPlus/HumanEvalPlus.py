@@ -2,7 +2,7 @@ import os, sys
 if __name__ == '__main':
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-import env
+from tools.env_utils import get_dataset_cache_folder
 
 from typing import List
 
@@ -17,7 +17,7 @@ info = read_metafile(os.path.dirname(os.path.abspath(__file__)))
 @register_benchmark('HumanEvalPlus')
 class HumanEvalPlus(Benchmark):
     name: str = info.get("Name")
-    path = os.path.join(env.DATASET_CACHE_FOLDER, "HumanEvalPlus", "HumanEvalPlus.jsonl")
+    path = os.path.join(get_dataset_cache_folder(), "HumanEvalPlus", "HumanEvalPlus.jsonl")
 
     def __init__(self,
                  name: str = "HumanEvalPlus",

@@ -3,13 +3,13 @@ name: "Test MBPP Evaluation"
 backend:
   - type: openai
     arguments:
-      api_key: YOUR_API_KEY_HERE
-      base_url: https://your-openai-api-url.com/api/
+      # API credentials will be loaded from .env file or environment variables
+      # Set OPENAI_API_KEY and OPENAI_BASE_URL in your .env file
     model_name: "Qwen3-30B-A3B"
 
 evaluation:
   benchmark:
-    - type: MBPP
+    - type: MBPPToy
       prompt_type: "Instruct"
       num_workers: 1
       num_samples: 1

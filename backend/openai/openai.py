@@ -10,6 +10,7 @@ from typing import List, Dict
 
 from backend.base import Generator
 from tools.utils import refine_text
+from tools.env_utils import get_api_key, get_api_base_url, load_environment, get_env_var
 from engine.registry import register_backend
 import time
 import json
@@ -22,24 +23,47 @@ class OpenaiGenerator(Generator):
                ) -> None:
         super().__init__(model_name)
         
+        # Load environment variables
+        load_environment()
+        
+        # Prepare OpenAI client arguments with environment fallbacks
+        client_args = dict(arguments)
+        
+        # Use environment variables if not provided in config
+        if 'api_key' not in client_args or not client_args['api_key']:
+            env_api_key = get_api_key('openai')
+            if env_api_key:
+                client_args['api_key'] = env_api_key
+                print("Using API key from environment variables")
+            else:
+                raise ValueError("API key not found in config or environment variables. Please set OPENAI_API_KEY in .env file")
+        
+        if 'base_url' not in client_args or not client_args['base_url']:
+            env_base_url = get_api_base_url('openai')
+            if env_base_url:
+                client_args['base_url'] = env_base_url
+                print(f"Using base URL from environment: {env_base_url}")
+        
         # 初始化 OpenAI 客戶端
-        self.client = OpenAI(
-            **arguments
-        )
-        self.model_type  = model_type
-        print(f"OpenAI client initialized with base_url: {arguments.get('base_url')}")
+        self.client = OpenAI(**client_args)
+        self.model_type = model_type
+        print(f"OpenAI client initialized with base_url: {client_args.get('base_url')}")
 
         
     def is_chat(self) -> bool:
         return self.model_type == "Chat"
 
-    def generate_with_stream_auto_continue(self, prompt, create_params, max_rounds=20):
+    def generate_with_stream_auto_continue(self, prompt, create_params, max_rounds=None):
         """
         串流 + 自動續寫。
         規則：
         - 若 finish_reason == "length"，就把目前已產生文字當成 assistant 回到對話裡，接著讓 user 說「Please continue.」
         - 最多續寫 max_rounds 輪（包含第 1 輪）
         """
+        # Use environment variable if max_rounds not specified
+        if max_rounds is None:
+            max_rounds = get_env_var('REQUESTS_ROUND_LIMIT', '20', int)
+        
         s = time.time()
         base_messages = [{"role": "user", "content": prompt}]
         current_messages = list(base_messages)

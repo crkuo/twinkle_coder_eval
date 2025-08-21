@@ -2,7 +2,7 @@ import os, sys
 if __name__ == '__main':
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-import env
+from tools.env_utils import get_dataset_cache_folder
 
 from typing import List
 
@@ -18,7 +18,7 @@ info = read_metafile(os.path.dirname(os.path.abspath(__file__)))
 @register_benchmark('MBPP')
 class MBPP(Benchmark):
     name: str = info.get("Name")
-    path = os.path.join(env.DATASET_CACHE_FOLDER, name, "mbpp.jsonl")
+    path = os.path.join(get_dataset_cache_folder(), name, "mbpp.jsonl")
     few_shots_start = 1
     few_shots_end = 4
 

@@ -59,10 +59,15 @@ def generate_config_signature(config_dict: dict, max_length: int = 16) -> str:
     signature = hash_hex[:max_length]
     return signature
 
-def ensure_empty_content(filepath):
-    with open(filepath, 'w') as fp:
-        fp.write("")
-    return filepath
+def remove_all_content_in_folder(folder_path):
+    import shutil
+    try:
+        if os.path.exists(folder_path):
+            shutil.rmtree(folder_path)
+    except OSError as e:
+        print(f"Error deleting folder: {e}")
+
+
 def main():
     parser = argparse.ArgumentParser(description='Run evaluation using YAML config')
     parser.add_argument('config', help='Path to YAML config file')
@@ -114,6 +119,7 @@ def main():
             }
             experiment_signature = f"{benchmark_type}_{generate_config_signature(config_dict_for_signature)}"
             benchmark_result_folder = os.path.join(save_folder, experiment_signature)
+            remove_all_content_in_folder(benchmark_result_folder)
             os.makedirs(benchmark_result_folder, exist_ok=True)
 
             config_save_path = os.path.join(benchmark_result_folder, 'config.json')
@@ -123,12 +129,6 @@ def main():
             evalutions_save_path = os.path.join(benchmark_result_folder, "evaluations.jsonl")
             result_save_path = os.path.join(benchmark_result_folder, "result.jsonl")
             
-            ensure_empty_content(config_save_path)
-            ensure_empty_content(prompts_save_path)
-            ensure_empty_content(generations_save_path)
-            ensure_empty_content(solutions_save_path)
-            ensure_empty_content(evalutions_save_path)
-            ensure_empty_content(result_save_path)
 
             # Save benchmark config
             with open(config_save_path, 'w', encoding='utf-8') as fp:

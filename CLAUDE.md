@@ -89,7 +89,7 @@ refactor/
 │   ├── BigCodeBench/   # Complex coding tasks
 │   ├── LeetCode/       # Algorithm problems
 │   ├── MBPPPlus/       # Enhanced MBPP
-│   └── TestMBPP/       # Lightweight testing benchmark
+│   └── MBPPToy/        # Lightweight testing benchmark
 ├── engine/             # Core framework
 │   ├── registry.py     # Component registration system
 │   ├── config.py       # YAML configuration management
@@ -123,7 +123,7 @@ refactor/
   - **BigCodeBench**: Complex multi-file projects
   - **LeetCode**: Algorithm and data structure problems
   - **MBPPPlus**: Enhanced version of MBPP
-  - **TestMBPP**: Lightweight testing subset
+  - **MBPPToy**: Lightweight testing subset
 
 ### ⚙️ Engine System
 - **Registry**: Dynamic component loading and management

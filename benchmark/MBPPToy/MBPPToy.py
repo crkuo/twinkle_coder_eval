@@ -2,7 +2,7 @@ import os, sys
 if __name__ == '__main':
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-import env
+from tools.env_utils import get_dataset_cache_folder
 
 from typing import List
 
@@ -15,18 +15,18 @@ from engine.registry import register_benchmark
 info = read_metafile(os.path.dirname(os.path.abspath(__file__)))
 
 
-@register_benchmark('TestMBPP')
-class TestMBPP(Benchmark):
+@register_benchmark('MBPPToy')
+class MBPPToy(Benchmark):
     name: str = info.get("Name")
-    path = os.path.join(env.DATASET_CACHE_FOLDER, name, "mbpp.jsonl")
+    path = os.path.join(get_dataset_cache_folder(), name, "mbpp.jsonl")
     few_shots_start = 1
     few_shots_end = 4
 
     test_start = 10
-    test_end = 20  # 只測試第一筆資料 (task_id=10)
+    test_end = 20  # Toy dataset: only test tasks 10-19 for quick evaluation
 
     def __init__(self,
-                 name:str = "MBPP",
+                 name:str = "MBPPToy",
                  timeout:float = 3.0,
                  prompt_type:str = "Instruction"): 
         super().__init__()

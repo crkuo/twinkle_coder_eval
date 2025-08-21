@@ -206,7 +206,7 @@ BACKENDS = Registry('backend', locations=[
 BENCHMARKS = Registry('benchmark', locations=[
     'benchmark.MBPP.MBPP',
     'benchmark.MBPPPlus.MBPPPlus',
-    'benchmark.TestMBPP.TestMBPP',
+    'benchmark.MBPPToy.MBPPToy',
     'benchmark.HumanEval.HumanEval',
     'benchmark.HumanEvalPlus.HumanEvalPlus',
     'benchmark.LeetCode.LeetCode',

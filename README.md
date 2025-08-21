@@ -58,7 +58,7 @@ pip install -r requirements.txt
 | **BigCodeBench** | Complex multi-file projects | 1140+ | Python |
 | **LeetCode** | Algorithm and data structures | 300+ | Python |
 | **MBPPPlus** | Enhanced version of MBPP | 378+ | Python |
-| **TestMBPP** | Lightweight testing subset | 4 | Python |
+| **MBPPToy** | Lightweight testing subset | 10 | Python |
 
 ## 🔌 Supported Backends
 
