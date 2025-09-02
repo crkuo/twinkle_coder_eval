@@ -118,7 +118,7 @@ evaluation:
         temperature: 0.0
         max_tokens: 1024
 ```
-> 💡 **Tip**: The `generate_args` field maps directly to the constructor parameters in these APIs. Any parameter documented in the official APIs can be used in the `arguments` section.
+> 💡 **Tip**: The `generate_args` field maps directly to the constructor parameters in these APIs. Any parameter documented in the official APIs can be used in the `generate_args` section.
 
 For detailed parameter configuration, refer to the official API documentation:
 

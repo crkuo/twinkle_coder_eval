@@ -147,8 +147,7 @@ backend:
 For complete parameter documentation, refer to the official API references:
 
 - **vLLM Backend**: [vLLM.LLM API Reference](https://docs.vllm.ai/en/latest/api/vllm/index.html#vllm.LLM)
-  
-- **OpenAI Backend**: [OpenAI API Reference](https://platform.openai.com/docs/api-reference/introduction) - Client initialization parameters
+- **OpenAI Backend**: [OpenAI API Reference](https://platform.openai.com/docs/api-reference/introduction) 
 
 > 💡 **Tip**: The `arguments` field maps directly to the constructor parameters in these APIs. Any parameter documented in the official APIs can be used in the `arguments` section.
 
@@ -234,36 +233,7 @@ benchmark:
   - type: LeetCode      # Algorithm problems (300+ problems)
 ```
 
-#### 3.3 Prompt Types
-
-| Type | Description | Use Case |
-|------|-------------|----------|
-| `"Instruct"` | Instruction-following format | Most modern models |
-| `"Chat"` | Conversational format | Chat-tuned models |
-| `"Base"` | Raw completion format | Base/completion models |
-
-#### 3.4 Generation Parameters
-
-```yaml
-generate_args:
-  temperature: 0.0      # Sampling temperature (0.0 = deterministic)
-  max_tokens: 2048      # Maximum tokens to generate
-  top_p: 1.0           # Nucleus sampling parameter
-  top_k: 50            # Top-k sampling parameter
-  stop: ["</code>"]    # Stop sequences
-```
-
-**Generation Parameters:**
-
-| Parameter | Default | Range | Description |
-|-----------|---------|-------|-------------|
-| `temperature` | `0.0` | `0.0-2.0` | Randomness (0.0=deterministic, higher=more random) |
-| `max_tokens` | `512` | `1-4096+` | Maximum output length |
-| `top_p` | `1.0` | `0.0-1.0` | Nucleus sampling threshold |
-| `top_k` | - | `1-100+` | Top-k sampling limit |
-| `stop` | `[]` | array | Stop generation sequences |
-
-#### 3.5 Processing Parameters
+#### 3.3 Processing Parameters
 
 ```yaml
 benchmark:
