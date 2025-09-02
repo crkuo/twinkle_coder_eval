@@ -77,7 +77,6 @@ evaluation:
 ## Directory Structure
 
 ```
-refactor/
 ├── backend/              # Model inference backends
 │   ├── base.py          # Abstract base class
 │   ├── openai/          # OpenAI API backend

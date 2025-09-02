@@ -25,7 +25,7 @@ def load_environment() -> None:
         return
 
     # Find .env file in project root
-    project_root = Path(__file__).parent.parent  # refactor/
+    project_root = Path(__file__).parent.parent  
     env_file = project_root / ".env"
 
     if env_file.exists():
@@ -50,7 +50,7 @@ def get_dataset_cache_folder() -> str:
 
     # Make it relative to project root if it's not absolute
     if not os.path.isabs(cache_folder):
-        project_root = Path(__file__).parent.parent  # refactor/
+        project_root = Path(__file__).parent.parent  
         cache_folder = str(project_root / cache_folder)
 
     # Ensure directory exists
@@ -72,7 +72,7 @@ def get_result_folder() -> str:
 
     # Make it relative to project root if it's not absolute
     if not os.path.isabs(result_folder):
-        project_root = Path(__file__).parent.parent  # refactor/
+        project_root = Path(__file__).parent.parent  
         result_folder = str(project_root / result_folder)
 
     return result_folder
@@ -172,6 +172,6 @@ def is_debug_enabled() -> bool:
 
 
 # Legacy compatibility - maintain the same interface as env.py
-ROOT = Path(__file__).parent.parent  # refactor/
+ROOT = Path(__file__).parent.parent  
 DATASET_CACHE_FOLDER = get_dataset_cache_folder()
 BENCHMARK_FOLDER = str(ROOT / "benchmark")
