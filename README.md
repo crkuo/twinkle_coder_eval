@@ -341,8 +341,6 @@ refactor/
 ## 🤝 Community
 
 - **Issues**: [GitHub Issues](../../issues)
-- **Discussions**: [GitHub Discussions](../../discussions)
-- **Documentation**: [Wiki](../../wiki)
 
 ## 📄 License
 
