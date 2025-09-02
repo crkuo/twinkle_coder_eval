@@ -133,6 +133,7 @@ classDiagram
         +backends: List[Generator]
         +__init__(config_path)
         +run_evaluation() List[Dict]
+        +check_config(config) Config
         +generate_config_signature(params) str
         +multi_process_function(function, parameters, num_workers) List
     }
@@ -148,26 +149,26 @@ classDiagram
     }
     
     %% Relationships
-    Generator <|-- OpenaiGenerator : implements
-    Generator <|-- VllmGenerator : implements
+    Generator <|-- OpenaiGenerator
+    Generator <|-- VllmGenerator
     
-    Benchmark <|-- MBPP : implements
-    Benchmark <|-- HumanEval : implements
-    Benchmark <|-- BigCodeBench : implements
+    Benchmark <|-- MBPP
+    Benchmark <|-- HumanEval
+    Benchmark <|-- BigCodeBench
     
-    Registry ||--o GlobalRegistries : contains
-    Config ||--o EvaluationOrchestrator : uses
+    Registry ||--o GlobalRegistries
+    Config ||--o EvaluationOrchestrator
     
-    EvaluationOrchestrator ||--o Registry : uses
-    EvaluationOrchestrator ||--o Generator : coordinates
-    EvaluationOrchestrator ||--o Benchmark : coordinates
+    EvaluationOrchestrator ||--o Registry
+    EvaluationOrchestrator ||--o Generator
+    EvaluationOrchestrator ||--o Benchmark
     
-    Benchmark ..> ExecutionResult : produces
-    Generator ..> Benchmark : provides_input_to
+    Benchmark ..> ExecutionResult
+    Generator ..> Benchmark
     
     %% Registry relationships
-    Registry ||--o Generator : manages
-    Registry ||--o Benchmark : manages
+    Registry ||--o Generator
+    Registry ||--o Benchmark
     
     %% Notes
     note for Generator "Abstract base class for all\nmodel inference backends.\nImplements the Strategy pattern."
