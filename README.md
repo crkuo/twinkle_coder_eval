@@ -340,9 +340,9 @@ refactor/
 
 ## 🤝 Community
 
-- **Issues**: [GitHub Issues](https://github.com/your-org/twinkle_code_eval/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/twinkle_code_eval/discussions)
-- **Documentation**: [Wiki](https://github.com/your-org/twinkle_code_eval/wiki)
+- **Issues**: [GitHub Issues](twinkle_code_eval/issues)
+- **Discussions**: [GitHub Discussions](twinkle_code_eval/discussions)
+- **Documentation**: [Wiki](twinkle_code_eval/wiki)
 
 ## 📄 License
 
