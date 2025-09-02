@@ -1,6 +1,15 @@
 # 🌟 Twinkle Code Evaluator
 
-A comprehensive, modular framework for evaluating Large Language Models (LLMs) on code generation benchmarks.
+**Twinkle Code Evaluator** is a production-ready, extensible framework designed for systematic evaluation of Large Language Models (LLMs) on code generation tasks. It provides a unified interface for running multiple benchmarks across different model backends, with support for both API-based models (OpenAI, Claude) and locally-hosted models (vLLM, Hugging Face).
+
+**Key Capabilities:**
+- **Multi-Backend Support**: Seamlessly switch between OpenAI API, vLLM high-performance inference, and custom backends
+- **Comprehensive Benchmark Suite**: Evaluate on MBPP, HumanEval, BigCodeBench, LeetCode, and custom benchmarks
+- **Configuration-Driven Workflow**: YAML-based experiment configuration with environment variable integration
+- **Safe Code Execution**: Sandboxed execution environment with timeout protection and resource limits
+- **Intelligent Result Management**: Automatic parameter-based directory generation prevents result overwrites
+- **Pass@k Evaluation**: Industry-standard metrics with statistical confidence intervals
+- **Production-Ready**: Black-formatted codebase with comprehensive error handling and logging
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-green.svg)](https://python.org)
@@ -23,7 +32,7 @@ A comprehensive, modular framework for evaluating Large Language Models (LLMs) o
 ```bash
 # Clone the repository
 git clone https://github.com/your-org/twinkle_code_eval.git
-cd twinkle_code_eval/refactor
+cd twinkle_code_eval
 
 # Install basic dependencies
 pip install -r requirements.txt
@@ -43,12 +52,6 @@ pip install -r requirements-BigCodeBench.txt
    nano .env
    ```
 
-2. **Required environment variables**:
-   ```bash
-   OPENAI_API_KEY=your_openai_api_key_here
-   DATASET_CACHE_FOLDER=cache
-   RESULT_FOLDER=result
-   ```
 
 ### Basic Usage
 
@@ -70,6 +73,12 @@ pip install -r requirements-BigCodeBench.txt
    # Results are saved to result/{model_name}/{benchmark_type}_{config_signature}/
    ls result/
    ```
+
+## 📖 Documentation
+
+- **[Configuration Guide](docs/configuration_guide.md)** - Comprehensive YAML configuration documentation with examples
+- **[API Reference](docs/api_reference.md)** - Backend and benchmark API documentation
+- **[Design Documentation](docs/design_docs/)** - Framework architecture and design decisions
 
 ## 📊 Supported Benchmarks
 
