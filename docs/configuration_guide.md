@@ -89,6 +89,7 @@ The `arguments` section contains parameters passed directly to the `OpenAI()` cl
 | `organization` | None | OpenAI organization ID |
 | `project` | None | OpenAI project ID |
 
+For more details, see [OpenAI API Reference](https://platform.openai.com/docs/api-reference/introduction).
 
 ```yaml
 backend:
@@ -128,8 +129,7 @@ The `arguments` section contains parameters passed directly to the `LLM()` const
 | `cpu_offload_gb` | `0` | CPU offload memory in GB |
 | `quantization` | None | Quantization method (`"awq"`, `"gptq"`, etc.) |
 
-**Note**: Framework parameters like `model_type`, `batch_size`, `temperature`, `max_tokens` should be set at the same level as `arguments`, not inside it:
-
+For more details, see [vLLM.LLM API Reference](https://docs.vllm.ai/en/latest/api/vllm/index.html#vllm.LLM)
 ```yaml
 backend:
   - type: vllm
@@ -141,6 +141,19 @@ backend:
       dtype: "bfloat16"          # vLLM LLM() parameter
       tensor_parallel_size: 2    # vLLM LLM() parameter
 ```
+
+#### 2.4 Official API References
+
+For complete parameter documentation, refer to the official API references:
+
+- **vLLM Backend**: [vLLM.LLM API Reference](https://docs.vllm.ai/en/latest/api/vllm/index.html#vllm.LLM)
+  - Contains all available parameters for the `arguments` field
+  - Includes detailed descriptions of GPU optimization settings
+  
+- **OpenAI Backend**: 
+  - [OpenAI API Reference](https://platform.openai.com/docs/api-reference/introduction) - Client initialization parameters
+
+> 💡 **Tip**: The `arguments` field maps directly to the constructor parameters in these APIs. Any parameter documented in the official APIs can be used in the `arguments` section.
 
 ### 3. Parameter Priority and Backward Compatibility
 
@@ -188,6 +201,11 @@ The `evaluation` section defines benchmarks and their parameters.
 | `num_workers` | integer | No | Parallel processing workers (default: 1) |
 | `pass_at_k` | integer | No | Pass@k evaluation metric (default: 1) |
 | `generate_args` | object | No | Model generation parameters |
+
+`generate_args` follow the generation arguments that correspond to their backend:
+- OpenAI: [Chat Completions API](https://platform.openai.com/docs/api-reference/chat/create)
+- vLLM: [vLLM.LLM.generate](https://docs.vllm.ai/en/v0.9.2/api/vllm/index.html#vllm.LLM.generate)
+ 
 
 #### 3.2 Benchmark Types
 

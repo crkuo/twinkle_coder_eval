@@ -59,8 +59,16 @@ pip install -r requirements-BigCodeBench.txt
 ## 📖 Documentation
 
 - **[Configuration Guide](docs/configuration_guide.md)** - Comprehensive YAML configuration documentation with examples
-- **[API Reference](docs/api_reference.md)** - Backend and benchmark API documentation
 - **[Design Documentation](docs/design_docs/)** - Framework architecture and design decisions
+
+### Backend API References
+
+For detailed parameter configuration, refer to the official API documentation:
+
+- **vLLM Backend**: [vLLM.LLM API Reference](https://docs.vllm.ai/en/latest/api/vllm/index.html#vllm.LLM) and [vLLM.generate](https://docs.vllm.ai/en/v0.9.2/api/vllm/index.html#vllm.LLM.generate) - Parameters for the `arguments` field
+- **OpenAI Backend**: 
+  - [OpenAI API Reference](https://platform.openai.com/docs/api-reference/introduction) - Client initialization parameters  
+  - [Chat Completions API](https://platform.openai.com/docs/api-reference/chat/create) - Generation parameters
 
 ## 📊 Supported Benchmarks
 
