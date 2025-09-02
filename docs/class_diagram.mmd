@@ -156,19 +156,19 @@ classDiagram
     Benchmark <|-- HumanEval
     Benchmark <|-- BigCodeBench
     
-    Registry ||--o GlobalRegistries
-    Config ||--o EvaluationOrchestrator
+    GlobalRegistries *-- Registry
+    EvaluationOrchestrator *-- Config
     
-    EvaluationOrchestrator ||--o Registry
-    EvaluationOrchestrator ||--o Generator
-    EvaluationOrchestrator ||--o Benchmark
+    EvaluationOrchestrator *-- Registry
+    EvaluationOrchestrator *-- Generator
+    EvaluationOrchestrator *-- Benchmark
     
-    Benchmark ..> ExecutionResult
-    Generator ..> Benchmark
+    Benchmark --> ExecutionResult
+    Generator --> Benchmark
     
     %% Registry relationships
-    Registry ||--o Generator
-    Registry ||--o Benchmark
+    Registry --> Generator
+    Registry --> Benchmark
     
     %% Notes
     note for Generator "Abstract base class for all\nmodel inference backends.\nImplements the Strategy pattern."
