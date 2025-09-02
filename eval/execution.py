@@ -16,43 +16,50 @@ from typing import Optional, Callable, Dict, Tuple, Any
 # it is highly unlikely that model-generated code will do something overtly
 # malicious in response to this test suite, model-generated code may act
 # destructively due to a lack of model capability or alignment.
-# Users are strongly encouraged to sandbox this evaluation suite so that it 
-# does not perform destructive actions on their host or network. For more 
+# Users are strongly encouraged to sandbox this evaluation suite so that it
+# does not perform destructive actions on their host or network. For more
 # information on how OpenAI sandboxes its code, see the accompanying paper.
-# Once you have read this disclaimer and taken appropriate precautions, 
+# Once you have read this disclaimer and taken appropriate precautions,
 # uncomment the 58 line and proceed at your own risk
 
-def check_correctness(task_id: int,
-                      completion_id: int,
-                      solution: str,
-                      time_out: float = 3.0,
-                      tests: str = None,
-                      ) -> Dict:
+
+def check_correctness(
+    task_id: int,
+    completion_id: int,
+    solution: str,
+    time_out: float = 3.0,
+    tests: str = None,
+) -> Dict:
     """
     Evaluates the functional correctness of a completion by running the test
-    suite provided in the problem. 
-    
+    suite provided in the problem.
+
     Automatically detects Windows and uses appropriate execution method.
-    
+
     Args:
         task_id: Task identifier
         completion_id: Completion identifier for matching results
         solution: The code solution to test
         tests: Optional additional test code (used by BigCodeBench)
         time_out: Maximum execution time in seconds
-        
+
     Returns:
         Dict containing test results
     """
-    
+
     # Check if we're on Windows and use Windows-compatible version
-    if platform.uname().system == 'Windows':
+    if platform.uname().system == "Windows":
         try:
             from eval.execution_windows import check_correctness_windows
-            return check_correctness_windows(task_id, completion_id, solution, time_out, tests)
+
+            return check_correctness_windows(
+                task_id, completion_id, solution, time_out, tests
+            )
         except ImportError:
-            print("Warning: Windows execution module not found, falling back to standard method")
-    
+            print(
+                "Warning: Windows execution module not found, falling back to standard method"
+            )
+
     # Original Unix/Linux implementation
     def unsafe_execute():
 
@@ -61,6 +68,7 @@ def check_correctness(task_id: int,
             # These system calls are needed when cleaning up tempdir.
             import os
             import shutil
+
             rmtree = shutil.rmtree
             rmdir = os.rmdir
             chdir = os.chdir
@@ -104,11 +112,11 @@ def check_correctness(task_id: int,
         result.append("timed out")
 
     return dict(
-        task_id = task_id,
-        completion_id = completion_id,
-        passed = result[0] == "passed",
-        result = result[0],
-        solution = solution
+        task_id=task_id,
+        completion_id=completion_id,
+        passed=result[0] == "passed",
+        result=result[0],
+        solution=solution,
     )
 
 
@@ -116,6 +124,7 @@ def check_correctness(task_id: int,
 def time_limit(seconds: float):
     def signal_handler(signum, frame):
         raise TimeoutException("Timed out!")
+
     signal.setitimer(signal.ITIMER_REAL, seconds)
     signal.signal(signal.SIGALRM, signal_handler)
     try:
@@ -145,7 +154,7 @@ class TimeoutException(Exception):
 
 
 class WriteOnlyStringIO(io.StringIO):
-    """ StringIO that throws an exception when it's read from """
+    """StringIO that throws an exception when it's read from"""
 
     def read(self, *args, **kwargs):
         raise IOError
@@ -157,12 +166,12 @@ class WriteOnlyStringIO(io.StringIO):
         raise IOError
 
     def readable(self, *args, **kwargs):
-        """ Returns True if the IO object can be read. """
+        """Returns True if the IO object can be read."""
         return False
 
 
 class redirect_stdin(contextlib._RedirectStream):  # type: ignore
-    _stream = 'stdin'
+    _stream = "stdin"
 
 
 @contextlib.contextmanager
@@ -188,26 +197,35 @@ def reliability_guard(maximum_memory_bytes: Optional[int] = None):
 
     WARNING
     This function is NOT a security sandbox. Untrusted code, including, model-
-    generated code, should not be blindly executed outside of one. See the 
+    generated code, should not be blindly executed outside of one. See the
     Codex paper for more information about OpenAI's code sandbox, and proceed
     with caution.
     """
 
     if maximum_memory_bytes is not None:
         import resource
-        resource.setrlimit(resource.RLIMIT_AS, (maximum_memory_bytes, maximum_memory_bytes))
-        resource.setrlimit(resource.RLIMIT_DATA, (maximum_memory_bytes, maximum_memory_bytes))
-        if not platform.uname().system == 'Darwin':
-            resource.setrlimit(resource.RLIMIT_STACK, (maximum_memory_bytes, maximum_memory_bytes))
+
+        resource.setrlimit(
+            resource.RLIMIT_AS, (maximum_memory_bytes, maximum_memory_bytes)
+        )
+        resource.setrlimit(
+            resource.RLIMIT_DATA, (maximum_memory_bytes, maximum_memory_bytes)
+        )
+        if not platform.uname().system == "Darwin":
+            resource.setrlimit(
+                resource.RLIMIT_STACK, (maximum_memory_bytes, maximum_memory_bytes)
+            )
 
     faulthandler.disable()
 
     import builtins
+
     builtins.exit = None
     builtins.quit = None
 
     import os
-    os.environ['OMP_NUM_THREADS'] = '1'
+
+    os.environ["OMP_NUM_THREADS"] = "1"
 
     os.kill = None
     os.system = None
@@ -238,18 +256,21 @@ def reliability_guard(maximum_memory_bytes: Optional[int] = None):
     os.chdir = None
 
     import shutil
+
     shutil.rmtree = None
     shutil.move = None
     shutil.chown = None
 
     import subprocess
+
     subprocess.Popen = None  # type: ignore
 
-    __builtins__['help'] = None
+    __builtins__["help"] = None
 
     import sys
-    sys.modules['ipdb'] = None
-    sys.modules['resource'] = None
+
+    sys.modules["ipdb"] = None
+    sys.modules["resource"] = None
 
     # BigCodeBenchmark would fail.
     # sys.modules['tkinter'] = None

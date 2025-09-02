@@ -12,9 +12,9 @@ except ImportError:
 from .lazy import LazyAttr, LazyObject
 
 # Constants
-DELETE_KEY = '_delete_'
+DELETE_KEY = "_delete_"
 
-if platform.system() == 'Windows':
+if platform.system() == "Windows":
     try:
         import regex as re
     except ImportError:
@@ -28,12 +28,12 @@ def _lazy2string(cfg_dict, dict_type=None):
     if isinstance(cfg_dict, dict):
         dict_type = dict_type or type(cfg_dict)
         return dict_type(
-            {k: _lazy2string(v, dict_type)
-             for k, v in dict.items(cfg_dict)})
+            {k: _lazy2string(v, dict_type) for k, v in dict.items(cfg_dict)}
+        )
     elif isinstance(cfg_dict, (tuple, list)):
         return type(cfg_dict)(_lazy2string(v, dict_type) for v in cfg_dict)
     elif isinstance(cfg_dict, (LazyAttr, LazyObject)):
-        return f'{cfg_dict.module}.{str(cfg_dict)}'
+        return f"{cfg_dict.module}.{str(cfg_dict)}"
     else:
         return cfg_dict
 
@@ -53,14 +53,15 @@ class ConfigDict(Dict):
     object during configuration parsing, and it should be set to False outside
     the Config to ensure that users do not experience the ``LazyObject``.
     """
+
     lazy = False
 
     def __init__(self, *args, **kwargs):
         """Initialize ConfigDict with automatic nested conversion."""
-        object.__setattr__(self, '__parent', kwargs.pop('__parent', None))
-        object.__setattr__(self, '__key', kwargs.pop('__key', None))
-        object.__setattr__(self, '__frozen', False)
-        
+        object.__setattr__(self, "__parent", kwargs.pop("__parent", None))
+        object.__setattr__(self, "__key", kwargs.pop("__key", None))
+        object.__setattr__(self, "__frozen", False)
+
         for arg in args:
             if not arg:
                 continue
@@ -93,8 +94,9 @@ class ConfigDict(Dict):
             if isinstance(value, (LazyAttr, LazyObject)) and not self.lazy:
                 value = value.build()
         except KeyError:
-            raise AttributeError(f"'{self.__class__.__name__}' object has no "
-                                 f"attribute '{name}'")
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no " f"attribute '{name}'"
+            )
         except Exception as e:
             raise e
         else:
@@ -177,7 +179,7 @@ class ConfigDict(Dict):
         other = {}
         if args:
             if len(args) > 1:
-                raise TypeError('update only accept one positional argument')
+                raise TypeError("update only accept one positional argument")
             # Avoid to used self.items to build LazyObject
             for key, value in dict.items(args[0]):
                 other[key] = value
@@ -185,8 +187,11 @@ class ConfigDict(Dict):
         for key, value in dict(kwargs).items():
             other[key] = value
         for k, v in other.items():
-            if ((k not in self) or (not isinstance(self[k], dict))
-                    or (not isinstance(v, dict))):
+            if (
+                (k not in self)
+                or (not isinstance(self[k], dict))
+                or (not isinstance(v, dict))
+            ):
                 self[k] = self._hook(v)
             else:
                 self[k].update(v)
@@ -244,9 +249,9 @@ class ConfigDict(Dict):
                     b.clear()
                 all_keys = list(b.keys()) + list(a.keys())
                 return {
-                    key:
-                    _merge_a_into_b(a.get(key, default), b.get(key, default))
-                    for key in all_keys if key != DELETE_KEY
+                    key: _merge_a_into_b(a.get(key, default), b.get(key, default))
+                    for key in all_keys
+                    if key != DELETE_KEY
                 }
             else:
                 return a if a is not default else b
@@ -271,10 +276,7 @@ class ConfigDict(Dict):
 
         def _to_dict(data):
             if isinstance(data, ConfigDict):
-                return {
-                    key: _to_dict(value)
-                    for key, value in Dict.items(data)
-                }
+                return {key: _to_dict(value) for key, value in Dict.items(data)}
             elif isinstance(data, dict):
                 return {key: _to_dict(value) for key, value in data.items()}
             elif isinstance(data, (list, tuple)):

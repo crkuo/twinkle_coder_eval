@@ -14,9 +14,9 @@ except ImportError:
 from engine import ConfigDict
 
 # Constants
-BASE_KEY = '_base_'
-DELETE_KEY = '_delete_'
-RESERVED_KEYS = ['filename', 'text', 'pretty_text', 'env_variables']
+BASE_KEY = "_base_"
+DELETE_KEY = "_delete_"
+RESERVED_KEYS = ["filename", "text", "pretty_text", "env_variables"]
 
 
 class Config:
@@ -59,35 +59,34 @@ class Config:
         if cfg_dict is None:
             cfg_dict = dict()
         elif not isinstance(cfg_dict, dict):
-            raise TypeError('cfg_dict must be a dict, but '
-                            f'got {type(cfg_dict)}')
-        
+            raise TypeError("cfg_dict must be a dict, but " f"got {type(cfg_dict)}")
+
         # Check for reserved keys
         for key in cfg_dict:
             if key in RESERVED_KEYS:
-                raise KeyError(f'{key} is reserved for config file')
+                raise KeyError(f"{key} is reserved for config file")
 
         if not isinstance(cfg_dict, ConfigDict):
             cfg_dict = ConfigDict(cfg_dict)
-        
-        super().__setattr__('_cfg_dict', cfg_dict)
-        super().__setattr__('_filename', filename)
+
+        super().__setattr__("_cfg_dict", cfg_dict)
+        super().__setattr__("_filename", filename)
 
         if cfg_text:
             text = cfg_text
         elif filename and os.path.exists(filename):
-            with open(filename, encoding='utf-8') as f:
+            with open(filename, encoding="utf-8") as f:
                 text = f.read()
         else:
-            text = ''
-        super().__setattr__('_text', text)
-        
+            text = ""
+        super().__setattr__("_text", text)
+
         if env_variables is None:
             env_variables = dict()
-        super().__setattr__('_env_variables', env_variables)
+        super().__setattr__("_env_variables", env_variables)
 
     @staticmethod
-    def fromfile(filename: Union[str, Path]) -> 'Config':
+    def fromfile(filename: Union[str, Path]) -> "Config":
         """Build a Config instance from config file.
 
         Supports JSON, YAML, and simple Python config files.
@@ -99,25 +98,25 @@ class Config:
             Config: Config instance built from config file.
         """
         filename = str(filename) if isinstance(filename, Path) else filename
-        
+
         if not os.path.exists(filename):
             raise FileNotFoundError(f"Config file '{filename}' not found")
-        
+
         file_ext = os.path.splitext(filename)[1].lower()
-        
-        if file_ext == '.json':
+
+        if file_ext == ".json":
             cfg_dict = Config._load_json(filename)
-        elif file_ext in ['.yml', '.yaml']:
+        elif file_ext in [".yml", ".yaml"]:
             cfg_dict = Config._load_yaml(filename)
-        elif file_ext == '.py':
+        elif file_ext == ".py":
             cfg_dict = Config._load_python(filename)
         else:
             raise ValueError(f"Unsupported config file format: {file_ext}")
-        
+
         return Config(cfg_dict, filename=filename)
 
     @staticmethod
-    def fromstring(cfg_str: str, file_format: str) -> 'Config':
+    def fromstring(cfg_str: str, file_format: str) -> "Config":
         """Build a Config instance from config text.
 
         Args:
@@ -127,11 +126,12 @@ class Config:
         Returns:
             Config: Config object generated from ``cfg_str``.
         """
-        if file_format not in ['.json', '.yaml', '.yml']:
+        if file_format not in [".json", ".yaml", ".yml"]:
             raise ValueError(f"Unsupported format: {file_format}")
-        
+
         with tempfile.NamedTemporaryFile(
-                'w', encoding='utf-8', suffix=file_format, delete=False) as temp_file:
+            "w", encoding="utf-8", suffix=file_format, delete=False
+        ) as temp_file:
             temp_file.write(cfg_str)
             temp_file_path = temp_file.name
 
@@ -146,39 +146,42 @@ class Config:
     @staticmethod
     def _load_json(filename: str) -> dict:
         """Load JSON config file."""
-        with open(filename, 'r', encoding='utf-8') as f:
+        with open(filename, "r", encoding="utf-8") as f:
             return json.load(f)
 
     @staticmethod
     def _load_yaml(filename: str) -> dict:
         """Load YAML config file."""
         if yaml is None:
-            raise ImportError("PyYAML is required to load YAML files. Install it with: pip install PyYAML")
-        
-        with open(filename, 'r', encoding='utf-8') as f:
+            raise ImportError(
+                "PyYAML is required to load YAML files. Install it with: pip install PyYAML"
+            )
+
+        with open(filename, "r", encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
 
     @staticmethod
     def _load_python(filename: str) -> dict:
         """Load simple Python config file."""
         # Simple Python config loader - executes the file and extracts variables
-        global_vars = {'__file__': filename}
+        global_vars = {"__file__": filename}
         local_vars = {}
-        
-        with open(filename, 'r', encoding='utf-8') as f:
+
+        with open(filename, "r", encoding="utf-8") as f:
             code = f.read()
-        
+
         try:
             exec(code, global_vars, local_vars)
         except Exception as e:
             raise ValueError(f"Error executing Python config file {filename}: {e}")
-        
+
         # Extract non-private variables
         cfg_dict = {
-            key: value for key, value in local_vars.items()
-            if not key.startswith('_') and not callable(value)
+            key: value
+            for key, value in local_vars.items()
+            if not key.startswith("_") and not callable(value)
         }
-        
+
         return cfg_dict
 
     @property
@@ -197,7 +200,7 @@ class Config:
         return self._env_variables
 
     def __repr__(self):
-        return f'Config (path: {self.filename}): {self._cfg_dict.__repr__()}'
+        return f"Config (path: {self.filename}): {self._cfg_dict.__repr__()}"
 
     def __len__(self):
         return len(self._cfg_dict)
@@ -235,7 +238,7 @@ class Config:
         cls = self.__class__
         other = cls.__new__(cls)
         other.__dict__.update(self.__dict__)
-        super(Config, other).__setattr__('_cfg_dict', self._cfg_dict.copy())
+        super(Config, other).__setattr__("_cfg_dict", self._cfg_dict.copy())
 
         return other
 
@@ -272,14 +275,14 @@ class Config:
         option_cfg_dict = {}
         for full_key, v in options.items():
             d = option_cfg_dict
-            key_list = full_key.split('.')
+            key_list = full_key.split(".")
             for subkey in key_list[:-1]:
                 d.setdefault(subkey, ConfigDict())
                 d = d[subkey]
             subkey = key_list[-1]
             d[subkey] = v
 
-        cfg_dict = super().__getattribute__('_cfg_dict')
+        cfg_dict = super().__getattribute__("_cfg_dict")
         cfg_dict.update(option_cfg_dict)
 
     def dump(self, file: Optional[Union[str, Path]] = None) -> Optional[str]:
@@ -295,18 +298,20 @@ class Config:
         """
         file = str(file) if isinstance(file, Path) else file
         cfg_dict = self.to_dict()
-        
+
         if file is None:
             return json.dumps(cfg_dict, indent=2)
         else:
             file_ext = os.path.splitext(file)[1].lower()
-            if file_ext == '.json':
-                with open(file, 'w', encoding='utf-8') as f:
+            if file_ext == ".json":
+                with open(file, "w", encoding="utf-8") as f:
                     json.dump(cfg_dict, f, indent=2)
-            elif file_ext in ['.yml', '.yaml']:
+            elif file_ext in [".yml", ".yaml"]:
                 if yaml is None:
-                    raise ImportError("PyYAML is required to dump YAML files. Install it with: pip install PyYAML")
-                with open(file, 'w', encoding='utf-8') as f:
+                    raise ImportError(
+                        "PyYAML is required to dump YAML files. Install it with: pip install PyYAML"
+                    )
+                with open(file, "w", encoding="utf-8") as f:
                     yaml.dump(cfg_dict, f, default_flow_style=False)
             else:
                 raise ValueError(f"Unsupported dump format: {file_ext}")

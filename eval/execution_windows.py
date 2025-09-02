@@ -16,24 +16,25 @@ from typing import Optional, Callable, Dict
 # it is highly unlikely that model-generated code will do something overtly
 # malicious in response to this test suite, model-generated code may act
 # destructively due to a lack of model capability or alignment.
-# Users are strongly encouraged to sandbox this evaluation suite so that it 
-# does not perform destructive actions on their host or network. For more 
+# Users are strongly encouraged to sandbox this evaluation suite so that it
+# does not perform destructive actions on their host or network. For more
 # information on how OpenAI sandboxes its code, see the accompanying paper.
-# Once you have read this disclaimer and taken appropriate precautions, 
+# Once you have read this disclaimer and taken appropriate precautions,
 # proceed at your own risk
 
 
-def check_correctness_windows(task_id: int,
-                             completion_id: int,
-                             solution: str,
-                             time_out: float = 3.0,
-                             tests: str = None,
-                             ) -> Dict:
+def check_correctness_windows(
+    task_id: int,
+    completion_id: int,
+    solution: str,
+    time_out: float = 3.0,
+    tests: str = None,
+) -> Dict:
     """
     Windows-compatible version of check_correctness using threading.
     Avoids multiprocessing serialization issues on Windows.
     """
-    
+
     def execute_in_isolation():
         """Execute code in isolated environment."""
         try:
@@ -42,30 +43,30 @@ def check_correctness_windows(task_id: int,
                 # Change to temporary directory
                 original_cwd = os.getcwd()
                 os.chdir(temp_dir)
-                
+
                 try:
                     # Apply safety restrictions AFTER changing directory
                     apply_windows_safety_guard()
-                    
+
                     # Execute the solution code
                     # If additional tests are provided (e.g., for BigCodeBench), append them
                     if tests:
                         check_program = solution + "\n" + tests
                     else:
                         check_program = solution
-                    
+
                     exec_globals = {}
                     with redirect_io():
                         exec(check_program, exec_globals)
-                    
+
                     return "passed"
-                    
+
                 except Exception as e:
                     return f"failed: {str(e)}"
                 finally:
                     # Always restore original directory
                     os.chdir(original_cwd)
-                    
+
         except Exception as e:
             return f"failed: {str(e)}"
 
@@ -87,7 +88,7 @@ def check_correctness_windows(task_id: int,
         completion_id=completion_id,
         passed=result == "passed",
         result=result,
-        solution=solution
+        solution=solution,
     )
 
 
@@ -119,7 +120,7 @@ class WriteOnlyStringIO(io.StringIO):
 
 
 class redirect_stdin(contextlib._RedirectStream):  # type: ignore
-    _stream = 'stdin'
+    _stream = "stdin"
 
 
 def apply_windows_safety_guard(maximum_memory_bytes: Optional[int] = None):
@@ -129,25 +130,34 @@ def apply_windows_safety_guard(maximum_memory_bytes: Optional[int] = None):
     """
 
     # Skip resource limits on Windows as they're not well supported
-    if maximum_memory_bytes is not None and platform.system() != 'Windows':
+    if maximum_memory_bytes is not None and platform.system() != "Windows":
         try:
             import resource
-            resource.setrlimit(resource.RLIMIT_AS, (maximum_memory_bytes, maximum_memory_bytes))
-            resource.setrlimit(resource.RLIMIT_DATA, (maximum_memory_bytes, maximum_memory_bytes))
-            if not platform.uname().system == 'Darwin':
-                resource.setrlimit(resource.RLIMIT_STACK, (maximum_memory_bytes, maximum_memory_bytes))
+
+            resource.setrlimit(
+                resource.RLIMIT_AS, (maximum_memory_bytes, maximum_memory_bytes)
+            )
+            resource.setrlimit(
+                resource.RLIMIT_DATA, (maximum_memory_bytes, maximum_memory_bytes)
+            )
+            if not platform.uname().system == "Darwin":
+                resource.setrlimit(
+                    resource.RLIMIT_STACK, (maximum_memory_bytes, maximum_memory_bytes)
+                )
         except ImportError:
             pass  # resource module not available on Windows
 
     faulthandler.disable()
 
     import builtins
+
     builtins.exit = None
     builtins.quit = None
 
     # Set environment variables for safety
     import os
-    os.environ['OMP_NUM_THREADS'] = '1'
+
+    os.environ["OMP_NUM_THREADS"] = "1"
 
     # Disable most dangerous OS functions, but keep essential ones for our context managers
     os.kill = None
@@ -178,19 +188,22 @@ def apply_windows_safety_guard(maximum_memory_bytes: Optional[int] = None):
     # Keep os.getcwd and os.chdir for our directory management
 
     import shutil
+
     # Keep shutil.rmtree for cleanup
     shutil.move = None
     shutil.chown = None
 
     import subprocess
+
     subprocess.Popen = None  # type: ignore
 
-    __builtins__['help'] = None
+    __builtins__["help"] = None
 
     import sys
-    sys.modules['ipdb'] = None
-    sys.modules['resource'] = None
-    
+
+    sys.modules["ipdb"] = None
+    sys.modules["resource"] = None
+
     # BigCodeBench would fail if these are disabled
     # sys.modules['tkinter'] = None
     # sys.modules['joblib'] = None

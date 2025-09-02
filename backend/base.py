@@ -6,6 +6,7 @@ sys.path.extend([os.path.dirname(ROOT), os.path.dirname(os.path.dirname(ROOT))])
 
 from abc import ABC, abstractmethod
 
+
 class Generator(ABC):
 
     model_name: str = None

@@ -5,43 +5,42 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 
 from abc import ABC, abstractmethod
 
+
 class Benchmark(ABC):
 
     name: str = None
     path: str = None
 
-    general_stop_words = [  "<|endoftext|>",
-                            "<|endofmask|>",
-                            "</s>",
-                            "\nif __name__",
-                            "\ndef main(",
-                            "\nprint(",
-                            '\n```\n'
-                        ]
-    
-    completion_stop_words = [   "\ndef ",
-                                "\nclass ",
-                                "\nimport ",
-                                "\nfrom ",
-                                "\nassert "
-                            ]
-    
-    imports = [ "import math",
-                "import re",
-                "import sys",
-                "import copy",
-                "import datetime",
-                "import itertools",
-                "import collections",
-                "import heapq",
-                "import functools",
-                "import hashlib",
-                "import numpy",
-                "import numpy as np",
-                "import string",
-                "from typing import *",
-                "from collections import *"
-            ]
+    general_stop_words = [
+        "<|endoftext|>",
+        "<|endofmask|>",
+        "</s>",
+        "\nif __name__",
+        "\ndef main(",
+        "\nprint(",
+        "\n```\n",
+    ]
+
+    completion_stop_words = ["\ndef ", "\nclass ", "\nimport ", "\nfrom ", "\nassert "]
+
+    imports = [
+        "import math",
+        "import re",
+        "import sys",
+        "import copy",
+        "import datetime",
+        "import itertools",
+        "import collections",
+        "import heapq",
+        "import functools",
+        "import hashlib",
+        "import numpy",
+        "import numpy as np",
+        "import string",
+        "from typing import *",
+        "from collections import *",
+    ]
+
     def __init__(self):
         """
         :param stop_words: list
@@ -51,7 +50,6 @@ class Benchmark(ABC):
         """
         pass
 
-
     @abstractmethod
     def get_prompts(self, doc):
         """Builds the prompt for the LM to generate from.
@@ -59,7 +57,6 @@ class Benchmark(ABC):
             sample from the test dataset
         """
         pass
-
 
     def get_reference(self, doc):
         """Builds the reference solution for the doc.
@@ -96,7 +93,7 @@ class Benchmark(ABC):
         Download dataset if dataset is not in cache folder
         """
         pass
-    
+
     def _stop_at_stop_token(decoded_string, stop_tokens):
         """
         Produces the prefix of decoded_string that ends at the first occurrence of
