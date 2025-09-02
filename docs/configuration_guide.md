@@ -147,11 +147,8 @@ backend:
 For complete parameter documentation, refer to the official API references:
 
 - **vLLM Backend**: [vLLM.LLM API Reference](https://docs.vllm.ai/en/latest/api/vllm/index.html#vllm.LLM)
-  - Contains all available parameters for the `arguments` field
-  - Includes detailed descriptions of GPU optimization settings
   
-- **OpenAI Backend**: 
-  - [OpenAI API Reference](https://platform.openai.com/docs/api-reference/introduction) - Client initialization parameters
+- **OpenAI Backend**: [OpenAI API Reference](https://platform.openai.com/docs/api-reference/introduction) - Client initialization parameters
 
 > 💡 **Tip**: The `arguments` field maps directly to the constructor parameters in these APIs. Any parameter documented in the official APIs can be used in the `arguments` section.
 

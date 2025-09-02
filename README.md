@@ -65,10 +65,8 @@ pip install -r requirements-BigCodeBench.txt
 
 For detailed parameter configuration, refer to the official API documentation:
 
-- **vLLM Backend**: [vLLM.LLM API Reference](https://docs.vllm.ai/en/latest/api/vllm/index.html#vllm.LLM) and [vLLM.generate](https://docs.vllm.ai/en/v0.9.2/api/vllm/index.html#vllm.LLM.generate) - Parameters for the `arguments` field
-- **OpenAI Backend**: 
-  - [OpenAI API Reference](https://platform.openai.com/docs/api-reference/introduction) - Client initialization parameters  
-  - [Chat Completions API](https://platform.openai.com/docs/api-reference/chat/create) - Generation parameters
+- **vLLM Backend**: [vLLM.LLM API Reference](https://docs.vllm.ai/en/latest/api/vllm/index.html#vllm.LLM) a - Parameters for the `arguments` field
+- **OpenAI Backend**: [OpenAI API Reference](https://platform.openai.com/docs/api-reference/introduction) - Client initialization parameters
 
 ## 📊 Supported Benchmarks
 
@@ -120,6 +118,12 @@ evaluation:
         temperature: 0.0
         max_tokens: 1024
 ```
+> 💡 **Tip**: The `generate_args` field maps directly to the constructor parameters in these APIs. Any parameter documented in the official APIs can be used in the `arguments` section.
+
+For detailed parameter configuration, refer to the official API documentation:
+
+- OpenAI: [Chat Completions API](https://platform.openai.com/docs/api-reference/chat/create)
+- vLLM: [vLLM.LLM.generate](https://docs.vllm.ai/en/v0.9.2/api/vllm/index.html#vllm.LLM.generate)
 
 ### Multi-Benchmark Evaluation
 
