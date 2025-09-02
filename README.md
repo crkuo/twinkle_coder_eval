@@ -37,7 +37,7 @@ pip install -r requirements-BigCodeBench.txt
 
 ### Basic Usage
 
-1. **Configure your evaluation**:
+1. **Configure your evaluation ([Configuration Guide](docs/configuration_guide.md))**:
    ```bash
    # Copy and edit a configuration file
    cp configs/test_mbpp_config.yml my_config.yml
