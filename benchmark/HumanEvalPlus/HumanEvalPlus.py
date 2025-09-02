@@ -101,7 +101,6 @@ class HumanEvalPlus(Benchmark):
         """
         Builds the prompt for the LM to generate from.
         """
-        assert self.prompt_type == "Completion", f"Prompt type must be Completion for HumanEval+"
 
         prompts = []
         for task_id, task_data in self.tasks.items():

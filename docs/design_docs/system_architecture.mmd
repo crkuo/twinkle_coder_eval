@@ -1,13 +1,13 @@
 graph TB
     subgraph "🎯 User Interface Layer"
-        CLI[["🖥️ Command Line Interface<br/>tools/run_evaluation.py"]]
+        CLI[["🖥️ Command Line Interface<br/>evaluate.py<br/>evaluate_argparse.py"]]
         CONFIG[["⚙️ Configuration Files<br/>configs/*.yml"]]
     end
     
     subgraph "🚀 Engine Layer - Core Orchestration"
         REGISTRY[["📋 Registry System<br/>engine/registry.py<br/>• Dynamic Loading<br/>• Component Discovery<br/>• Auto Registration"]]
         CONFIGMGR[["🔧 Config Manager<br/>engine/config.py<br/>• YAML Processing<br/>• Parameter Validation<br/>• Inheritance Support"]]
-        ORCHESTRATOR[["🎵 Evaluation Orchestrator<br/>tools/run_evaluation.py<br/>• Multi-benchmark Coordination<br/>• Result Aggregation<br/>• Parameter-based Directories"]]
+        ORCHESTRATOR[["🎵 Evaluation Orchestrator<br/>evaluate.py<br/>• Multi-benchmark Coordination<br/>• Environment Variable Integration<br/>• Parameter-based Directories"]]
     end
     
     subgraph "🔌 Backend Layer - Model Inference"

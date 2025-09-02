@@ -19,10 +19,10 @@ The framework follows a **Plugin-based Architecture** with three main components
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Engine Layer                         │
-│  ┌─────────────┐  ┌──────────────┐  ┌────────────────┐ │
-│  │ Registry    │  │ Config       │  │ Evaluation     │ │
-│  │ System      │  │ Management   │  │ Orchestrator   │ │
-│  └─────────────┘  └──────────────┘  └────────────────┘ │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────────┐  │
+│  │ Registry    │  │ Config       │  │ Evaluation     │  │
+│  │ System      │  │ Management   │  │ Orchestrator   │  │
+│  └─────────────┘  └──────────────┘  └────────────────┘  │
 └─────────────────────────────────────────────────────────┘
            │                                    │
 ┌─────────────────────┐                ┌──────────────────┐
@@ -97,7 +97,9 @@ refactor/
 ├── eval/               # Execution and evaluation
 │   └── execution.py    # Safe code execution
 ├── tools/              # Utilities and runners
-│   └── run_evaluation.py # Main evaluation script
+│   ├── env_utils.py      # Environment variable utilities
+│   ├── utils.py          # General utility functions  
+│   └── DEPRECATED_run_evaluation.md # Migration guide
 ├── configs/            # Configuration templates
 ├── utils.py           # Helper functions
 ├── sanitize.py        # Code sanitization
@@ -163,7 +165,7 @@ new_backend = BACKENDS.get("CustomBackend")
 
 ### Basic Single Benchmark
 ```bash
-python tools/run_evaluation.py configs/test_mbpp_config.yml
+python evaluate.py configs/test_mbpp_config.yml
 ```
 
 ### Multi-Benchmark Evaluation
@@ -236,7 +238,7 @@ model:
 
 2. **Run Tests**:
    ```bash
-   python tools/run_evaluation.py configs/test_mbpp_config.yml
+   python evaluate.py configs/test_mbpp_config.yml
    ```
 
 3. **Add Components**: Follow extension patterns above

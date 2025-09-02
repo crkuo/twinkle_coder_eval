@@ -25,23 +25,31 @@ from typing import Optional, Callable, Dict, Tuple, Any
 def check_correctness(task_id: int,
                       completion_id: int,
                       solution: str,
-                      time_out: float,
+                      time_out: float = 3.0,
+                      tests: str = None,
                       ) -> Dict:
     """
     Evaluates the functional correctness of a completion by running the test
     suite provided in the problem. 
     
     Automatically detects Windows and uses appropriate execution method.
-
-    :param completion_id: an optional completion ID so we can match
-        the results later even if execution finishes asynchronously.
+    
+    Args:
+        task_id: Task identifier
+        completion_id: Completion identifier for matching results
+        solution: The code solution to test
+        tests: Optional additional test code (used by BigCodeBench)
+        time_out: Maximum execution time in seconds
+        
+    Returns:
+        Dict containing test results
     """
     
     # Check if we're on Windows and use Windows-compatible version
     if platform.uname().system == 'Windows':
         try:
             from eval.execution_windows import check_correctness_windows
-            return check_correctness_windows(task_id, completion_id, solution, time_out)
+            return check_correctness_windows(task_id, completion_id, solution, time_out, tests)
         except ImportError:
             print("Warning: Windows execution module not found, falling back to standard method")
     
@@ -61,7 +69,11 @@ def check_correctness(task_id: int,
             reliability_guard()
 
             # Construct the check program and run it.
-            check_program = solution
+            # If additional tests are provided (e.g., for BigCodeBench), append them
+            if tests:
+                check_program = solution + "\n" + tests
+            else:
+                check_program = solution
 
             try:
                 exec_globals = {}
@@ -237,7 +249,9 @@ def reliability_guard(maximum_memory_bytes: Optional[int] = None):
 
     import sys
     sys.modules['ipdb'] = None
-    sys.modules['joblib'] = None
     sys.modules['resource'] = None
-    sys.modules['psutil'] = None
-    sys.modules['tkinter'] = None
+
+    # BigCodeBenchmark would fail.
+    # sys.modules['tkinter'] = None
+    # sys.modules['joblib'] = None
+    # sys.modules['psutil'] = None

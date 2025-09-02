@@ -106,7 +106,7 @@ class MBPPPlus(Benchmark):
         """
         Builds the prompt for the LM to generate from.
         """
-        assert self.prompt_type == "Instruction", f"Prompt type must be Instruction for {self.name}"
+        # assert self.prompt_type == "Instruction", f"Prompt type must be Instruction for {self.name}"
 
         prompts = []
         for task_id, task_data in self.tasks.items():

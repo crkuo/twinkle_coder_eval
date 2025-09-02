@@ -1,6 +1,6 @@
 """
-增強版註冊系統
-基於 mmengine 設計，加入動態載入和 default_args 支援
+Enhanced Registry System
+Based on mmengine design with dynamic loading and default_args support
 """
 import inspect
 import importlib
@@ -11,8 +11,8 @@ from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 class Registry:
     """
-    增強版註冊表
-    支援動態模組載入和 default_args
+    Enhanced Registry
+    Supports dynamic module loading and default_args
     """
     
     def __init__(self, name: str, build_func: Optional[Callable] = None, locations: List[str] = None):
@@ -25,11 +25,11 @@ class Registry:
     
     def register_module(self, name: Optional[str] = None, force: bool = False):
         """
-        註冊模組裝飾器
+        Module registration decorator
         
         Args:
-            name: 註冊名稱，預設使用類名
-            force: 是否強制覆蓋已存在的註冊
+            name: Registration name, defaults to class name
+            force: Whether to force overwrite existing registration
         """
         def _register(cls):
             module_name = name or cls.__name__
@@ -44,49 +44,49 @@ class Registry:
     
     def get(self, name: str, location: str = None) -> Optional[Type]:
         """
-        獲取註冊的模組，支援動態載入
+        Get registered module with dynamic loading support
         
         Args:
-            name: 模組名稱
+            name: Module name
             
         Returns:
-            註冊的類或 None
+            Registered class or None
         """
-        # 首先嘗試從已註冊的模組獲取
+        # First try to get from already registered modules
         if name in self._module_dict:
             return self._module_dict[name]
         
-        # 如果沒有找到，嘗試動態載入
+        # If not found, try dynamic loading
         return self.get_module(name, location)
     
     def get_module(self, mod_name: str, location: str = None) -> Optional[Type]:
         """
-        獲取模組，支援指定位置的動態載入
-        適用於載入新的 benchmark 或 backend
+        Get module with dynamic loading support for specified locations
+        Suitable for loading new benchmarks or backends
         
         Args:
-            name: 模組名稱 (如 "LeetCode")
-            location: 模組位置模板 (如 "benchmark.{name}.{name}")
+            name: Module name (e.g. "LeetCode")
+            location: Module location template (e.g. "benchmark.{name}.{name}")
             
         Returns:
-            註冊的類或 None
+            Registered class or None
             
         Example:
             BENCHMARKS.get_module("LeetCode", "benchmark.{name}.{name}")
-            # 會嘗試載入 benchmark.LeetCode.LeetCode 模組
+            # Will try to load benchmark.LeetCode.LeetCode module
         """
-        # 首先嘗試從已註冊的模組獲取
+        # First try to get from already registered modules
         if mod_name in self._module_dict:
             return self._module_dict[mod_name]
         if location is None:
             location = f"{self._name}.{mod_name}.{mod_name}"
-        # 如果指定了位置模板，格式化後載入
+        # If location template is specified, format and load
         formatted_location = location.format(name=mod_name)
         try:
             importlib.import_module(formatted_location)
             self.logger.debug(f"Successfully imported {formatted_location}")
             
-            # 載入後，裝飾器會自動註冊，再次嘗試獲取
+            # After loading, decorator will automatically register, try to get again
             if mod_name in self._module_dict:
                 return self._module_dict[mod_name]
             else:
@@ -97,7 +97,7 @@ class Registry:
     
     def _import_modules(self):
         """
-        動態載入指定位置的模組
+        Dynamically load modules from specified locations
         """
         if self._imported:
             return
@@ -113,19 +113,19 @@ class Registry:
     
     def build(self, cfg: Dict[str, Any]) -> Any:
         """
-        構建物件
+        Build object
         
         Args:
-            cfg: 包含 'type' 欄位的配置字典
+            cfg: Configuration dictionary containing 'type' field
             
         Returns:
-            構建的物件實例
+            Built object instance
         """
         return self._build_func(cfg, self)
     
     def _default_build_func(self, cfg: Dict[str, Any], registry: 'Registry') -> Any:
         """
-        預設構建函數
+        Default build function
         """
         cfg = cfg.copy()
         
@@ -138,7 +138,7 @@ class Registry:
         if obj_cls is None:
             raise ValueError(f"Module '{obj_type}' not found in registry. Available modules: {list(registry._module_dict.keys())}")
         
-        # 根據類的 __init__ 方法簽名過濾參數
+        # Filter parameters based on class __init__ method signature
         init_signature = inspect.signature(obj_cls.__init__)
         valid_params = {}
         
@@ -146,36 +146,36 @@ class Registry:
             if param_name == 'self':
                 continue
             
-            # 處理 **kwargs 參數 - 視為空字典
+            # Handle **kwargs parameters - treat as empty dictionary
             if param.kind == inspect.Parameter.VAR_KEYWORD:
                 continue
                 
             if param_name in cfg:
                 valid_params[param_name] = cfg[param_name]
             elif param.default is not inspect.Parameter.empty:
-                # 使用預設值
+                # Use default value
                 pass
             else:
-                # 必要參數但未提供
+                # Required parameter but not provided
                 raise ValueError(f"Required parameter '{param_name}' not provided for {obj_cls.__name__}")
         
         return obj_cls(**valid_params)
     
     def list_modules(self) -> List[str]:
         """
-        列出所有註冊的模組名稱
+        List all registered module names
         """
         return list(self._module_dict.keys())
     
     def __contains__(self, name: str) -> bool:
         """
-        檢查模組是否已註冊
+        Check if module is already registered
         """
         return name in self._module_dict
     
     def __len__(self) -> int:
         """
-        返回註冊模組數量
+        Return number of registered modules
         """
         return len(self._module_dict)
     
@@ -183,22 +183,22 @@ class Registry:
         return f"Registry(name={self._name}, modules={len(self._module_dict)})"
 
 
-# 便利函數
+# Convenience functions
 def build_from_cfg(cfg: Dict[str, Any], registry: Registry) -> Any:
     """
-    從配置構建物件
+    Build object from configuration
     
     Args:
-        cfg: 配置字典
-        registry: 註冊表
+        cfg: Configuration dictionary
+        registry: Registry
         
     Returns:
-        構建的物件
+        Built object
     """
     return registry.build(cfg)
 
 
-# 全域註冊表 - 支援自動載入
+# Global registries - support automatic loading
 BACKENDS = Registry('backend', locations=[
     'backend.vllm.vllm',
     'backend.openai.openai'
@@ -218,27 +218,27 @@ MODELS = Registry('model')
 DATASETS = Registry('dataset')
 
 
-# 裝飾器別名
+# Decorator aliases
 def register_backend(name: Optional[str] = None, force: bool = False):
-    """註冊後端"""
+    """Register backend"""
     return BACKENDS.register_module(name, force)
 
 
 def register_benchmark(name: Optional[str] = None, force: bool = False):
-    """註冊基準測試"""
+    """Register benchmark"""
     return BENCHMARKS.register_module(name, force)
 
 
 def register_evaluator(name: Optional[str] = None, force: bool = False):
-    """註冊評估器"""
+    """Register evaluator"""
     return EVALUATORS.register_module(name, force)
 
 
 def register_model(name: Optional[str] = None, force: bool = False):
-    """註冊模型"""
+    """Register model"""
     return MODELS.register_module(name, force)
 
 
 def register_dataset(name: Optional[str] = None, force: bool = False):
-    """註冊資料集"""
+    """Register dataset"""
     return DATASETS.register_module(name, force)

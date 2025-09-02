@@ -25,9 +25,30 @@ A comprehensive, modular framework for evaluating Large Language Models (LLMs) o
 git clone https://github.com/your-org/twinkle_code_eval.git
 cd twinkle_code_eval/refactor
 
-# Install dependencies
+# Install basic dependencies
 pip install -r requirements.txt
+
+# For BigCodeBench evaluation, install additional dependencies
+pip install -r requirements-BigCodeBench.txt
 ```
+
+### Environment Setup
+
+1. **Create environment file**:
+   ```bash
+   # Copy example environment file
+   cp .env.example .env
+   
+   # Edit .env and set your API keys
+   nano .env
+   ```
+
+2. **Required environment variables**:
+   ```bash
+   OPENAI_API_KEY=your_openai_api_key_here
+   DATASET_CACHE_FOLDER=cache
+   RESULT_FOLDER=result
+   ```
 
 ### Basic Usage
 
@@ -40,7 +61,8 @@ pip install -r requirements.txt
 
 2. **Run evaluation**:
    ```bash
-   python tools/run_evaluation.py my_config.yml
+   # YAML configuration (recommended)
+   python evaluate.py my_config.yml
    ```
 
 3. **Check results**:
@@ -51,22 +73,29 @@ pip install -r requirements.txt
 
 ## 📊 Supported Benchmarks
 
-| Benchmark | Description | Tasks | Language |
-|-----------|-------------|-------|----------|
-| **MBPP** | Mostly Basic Python Problems | 374 | Python |
-| **HumanEval** | Function completion tasks | 164 | Python |
-| **BigCodeBench** | Complex multi-file projects | 1140+ | Python |
-| **LeetCode** | Algorithm and data structures | 300+ | Python |
-| **MBPPPlus** | Enhanced version of MBPP | 378+ | Python |
-| **MBPPToy** | Lightweight testing subset | 10 | Python |
+| Benchmark | Description | Tasks | Language | Source |
+|-----------|-------------|-------|----------|---------|
+| **MBPP** | Mostly Basic Python Problems | 374 | Python | [Google Research](https://github.com/google-research/google-research/tree/master/mbpp) |
+| **MBPPPlus** | Enhanced version of MBPP with more tests | 399 | Python | [MBPP Plus](https://github.com/google-research/google-research/tree/master/mbpp) |
+| **MBPPToy** | Lightweight testing subset (tasks 10-19) | 10 | Python | MBPP subset |
+| **HumanEval** | Function completion tasks | 164 | Python | [OpenAI HumanEval](https://github.com/openai/human-eval) |
+| **HumanEvalPlus** | HumanEval with additional test cases | 164 | Python | [EvalPlus](https://github.com/evalplus/evalplus) |
+| **BigCodeBench** | Complex multi-file projects | 1140+ | Python | [BigCode](https://huggingface.co/datasets/bigcode/bigcodebench) ⚠️ |
+| **BigCodeBenchHard** | Challenging subset of BigCodeBench | 473+ | Python | [BigCode Hard](https://huggingface.co/datasets/bigcode/bigcodebench-hard) ⚠️ |
+| **LeetCode** | Algorithm and data structure problems | 300+ | Python | LeetCode problems |
+
+> ⚠️ **BigCodeBench Requirements**: For BigCodeBench and BigCodeBenchHard, additional dependencies are required:
+> ```bash
+> pip install -r requirements-BigCodeBench.txt
+> ```
+> These benchmarks use complex libraries including TensorFlow, Django, OpenCV, and others.
 
 ## 🔌 Supported Backends
 
-| Backend | Description | Use Case |
-|---------|-------------|----------|
-| **OpenAI** | Official OpenAI API | GPT-3.5, GPT-4, and compatible APIs |
-| **vLLM** | High-performance inference | Local models, high-throughput evaluation |
-| **Mock** | Testing backend | Development, CI/CD pipelines |
+| Backend | Description | Use Case | Features |
+|---------|-------------|----------|----------|
+| **OpenAI** | Official OpenAI API | GPT-3.5, GPT-4, and compatible APIs | • Chat/Completion modes<br/>• Stream auto-continuation<br/>• Environment variable config<br/>• Direct client parameter passing |
+| **vLLM** | High-performance inference engine | Local models, high-throughput evaluation | • GPU acceleration<br/>• Batch processing<br/>• Memory optimization<br/>• Direct LLM parameter passing |
 
 ## 📖 Configuration Examples
 
@@ -76,20 +105,19 @@ pip install -r requirements.txt
 # configs/single_eval.yml
 name: "GPT-4 MBPP Evaluation"
 
-model:
-  backend:
-    - type: openai
-      server_params:
-        api_key: YOUR_API_KEY_HERE
-        base_url: https://api.openai.com/v1
-      model_name: "gpt-4"
+backend:
+  - type: openai
+    arguments:
+      # API credentials loaded from .env file
+      # Set OPENAI_API_KEY in your .env file
+    model_name: "gpt-4"
 
 evaluation:
   benchmark:
     - type: MBPP
       prompt_type: "Chat"
-      params:
-        num_samples: 10
+      num_samples: 10
+      generate_args:
         temperature: 0.0
         max_tokens: 1024
 ```
@@ -100,29 +128,31 @@ evaluation:
 # configs/comprehensive_eval.yml
 name: "Comprehensive Code Evaluation"
 
-model:
-  backend:
-    - type: openai
-      server_params:
-        api_key: YOUR_API_KEY_HERE
-      model_name: "gpt-4"
+backend:
+  - type: openai
+    arguments:
+      # API key from .env file
+    model_name: "gpt-4"
 
 evaluation:
   benchmark:
     - type: MBPP
-      params:
-        num_samples: 20
+      num_samples: 20
+      generate_args:
         temperature: 0.0
         
     - type: HumanEval
-      params:
-        num_samples: 20
+      num_samples: 20
+      generate_args:
         temperature: 0.0
         
     - type: BigCodeBench
-      params:
-        num_samples: 5
+      num_samples: 5
+      generate_args:
         temperature: 0.2
+
+# Note: BigCodeBench requires additional dependencies
+# pip install -r requirements-BigCodeBench.txt
 ```
 
 ### Local Model with vLLM
@@ -131,23 +161,71 @@ evaluation:
 # configs/local_model.yml
 name: "Local Model Evaluation"
 
-model:
-  backend:
-    - type: vllm
-      server_params:
-        dtype: "bfloat16"
-        num_gpus: 1
-        trust_remote_code: true
-      model_name: "deepseek-ai/deepseek-coder-6.7b-instruct"
+backend:
+  - type: vllm
+    arguments:
+      # Direct vLLM LLM() constructor parameters
+      dtype: "bfloat16"
+      tensor_parallel_size: 1
+      trust_remote_code: true
+      max_model_len: 2048
+    model_name: "deepseek-ai/deepseek-coder-6.7b-instruct"
 
 evaluation:
   benchmark:
     - type: MBPP
       prompt_type: "Instruction"
-      params:
-        num_samples: 10
+      num_samples: 10
+      generate_args:
         batch_size: 4
 ```
+
+## 🔧 Backend Configuration Details
+
+### Understanding the `arguments` Parameter
+
+The `arguments` parameter in backend configuration serves different purposes for each backend type:
+
+#### OpenAI Backend
+The `arguments` parameter contains **OpenAI client initialization parameters** that are passed directly to the `OpenAI()` constructor:
+
+```yaml
+backend:
+  - type: openai
+    arguments:
+      api_key: "your-api-key"        # Direct to OpenAI(api_key=...)
+      base_url: "custom-endpoint"    # Direct to OpenAI(base_url=...)
+      timeout: 30                    # Direct to OpenAI(timeout=...)
+      max_retries: 3                 # Direct to OpenAI(max_retries=...)
+    model_name: "gpt-4"
+```
+
+**Environment Variable Fallback**: If `api_key` or `base_url` are not provided in `arguments`, they will be automatically loaded from environment variables (`OPENAI_API_KEY`, `OPENAI_BASE_URL`).
+
+#### vLLM Backend
+The `arguments` parameter contains **vLLM LLM constructor parameters** that are passed directly to the `LLM()` constructor:
+
+```yaml
+backend:
+  - type: vllm
+    arguments:
+      dtype: "bfloat16"              # Direct to LLM(dtype=...)
+      tensor_parallel_size: 2        # Direct to LLM(tensor_parallel_size=...)
+      max_model_len: 4096           # Direct to LLM(max_model_len=...)
+      trust_remote_code: true        # Direct to LLM(trust_remote_code=...)
+      gpu_memory_utilization: 0.9    # Direct to LLM(gpu_memory_utilization=...)
+    model_name: "your-model-path"
+```
+
+**Backward Compatibility**: Direct parameters in the constructor (like `dtype: "bfloat16"` at the same level as `arguments`) are still supported but will be overridden by values in `arguments` if both are present.
+
+### Parameter Priority and Merging
+
+For both backends, the parameter resolution follows this priority:
+
+1. **Highest Priority**: Values in `arguments` 
+2. **Medium Priority**: Environment variables (OpenAI only)
+3. **Lowest Priority**: Direct constructor parameters (backward compatibility)
 
 ## 🛠️ Advanced Usage
 
@@ -237,8 +315,9 @@ refactor/
 ├── benchmark/         # Evaluation benchmarks  
 ├── engine/           # Core framework (registry, config)
 ├── eval/             # Code execution and evaluation
-├── tools/            # CLI tools and utilities
+├── tools/            # Utilities and helper scripts
 ├── configs/          # Configuration templates
+├── evaluate.py       # Main evaluation script
 └── tests/            # Test suite
 ```
 

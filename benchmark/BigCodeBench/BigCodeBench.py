@@ -29,7 +29,7 @@ class BigCodeBench(Benchmark):
         
         self.name = name
         self.timeout = timeout
-        self.prompt_type = prompt_type
+        self.prompt_type = "Completion"
         self.tasks = self.get_task()
 
     def prepare_dataset(self):
@@ -106,7 +106,6 @@ class BigCodeBench(Benchmark):
         """
         prompts = []
         for task_id, task_data in self.tasks.items():
-
             if self.prompt_type == "Completion":
                 prompt = task_data.get('complete_prompt', task_data.get('prompt', ''))
             elif self.prompt_type == "Instruction":
@@ -160,7 +159,7 @@ class BigCodeBench(Benchmark):
         result = check_correctness(solution['task_id'],
                                     solution['completion_id'],
                                     code,
-                                    task_data["test"],
-                                    self.timeout)
+                                    self.timeout,
+                                    tests=task_data["test"])
         
         return result

@@ -26,7 +26,8 @@ from typing import Optional, Callable, Dict
 def check_correctness_windows(task_id: int,
                              completion_id: int,
                              solution: str,
-                             time_out: float,
+                             time_out: float = 3.0,
+                             tests: str = None,
                              ) -> Dict:
     """
     Windows-compatible version of check_correctness using threading.
@@ -47,9 +48,15 @@ def check_correctness_windows(task_id: int,
                     apply_windows_safety_guard()
                     
                     # Execute the solution code
+                    # If additional tests are provided (e.g., for BigCodeBench), append them
+                    if tests:
+                        check_program = solution + "\n" + tests
+                    else:
+                        check_program = solution
+                    
                     exec_globals = {}
                     with redirect_io():
-                        exec(solution, exec_globals)
+                        exec(check_program, exec_globals)
                     
                     return "passed"
                     
@@ -182,7 +189,9 @@ def apply_windows_safety_guard(maximum_memory_bytes: Optional[int] = None):
 
     import sys
     sys.modules['ipdb'] = None
-    sys.modules['joblib'] = None
     sys.modules['resource'] = None
-    sys.modules['psutil'] = None
-    sys.modules['tkinter'] = None
+    
+    # BigCodeBench would fail if these are disabled
+    # sys.modules['tkinter'] = None
+    # sys.modules['joblib'] = None
+    # sys.modules['psutil'] = None

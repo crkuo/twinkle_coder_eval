@@ -44,7 +44,7 @@ class OpenaiGenerator(Generator):
                 client_args['base_url'] = env_base_url
                 print(f"Using base URL from environment: {env_base_url}")
         
-        # 初始化 OpenAI 客戶端
+        # Initialize OpenAI client
         self.client = OpenAI(**client_args)
         self.model_type = model_type
         print(f"OpenAI client initialized with base_url: {client_args.get('base_url')}")
@@ -55,10 +55,10 @@ class OpenaiGenerator(Generator):
 
     def generate_with_stream_auto_continue(self, prompt, create_params, max_rounds=None):
         """
-        串流 + 自動續寫。
-        規則：
-        - 若 finish_reason == "length"，就把目前已產生文字當成 assistant 回到對話裡，接著讓 user 說「Please continue.」
-        - 最多續寫 max_rounds 輪（包含第 1 輪）
+        Streaming with automatic continuation.
+        Rules:
+        - If finish_reason == "length", put current generated text as assistant message in conversation, then let user say "Please continue."
+        - Maximum continuation of max_rounds rounds (including the first round)
         """
         # Use environment variable if max_rounds not specified
         if max_rounds is None:
@@ -85,17 +85,17 @@ class OpenaiGenerator(Generator):
                 final_finish_reason = finish_reason
                 num_response += 1
                 if finish_reason != "length":
-                    # 正常完成（"stop" 或其他），結束
+                    # Normal completion ("stop" or others), end
                     break
                 
-                # 被切斷：把已產生片段放回歷史，再要求繼續
+                # Truncated: put generated fragment back to history, then request continuation
                 current_messages += [
                     {"role": "assistant", "content": content if content else ""},
                     {"role": "user", "content": "Please continue where you left off, without repeating."},
                 ]
                 
             except Exception as e:
-                print(f"串流獲取回應時出錯 (輪次 {round_idx + 1}): {e}")
+                print(f"Error during streaming response (round {round_idx + 1}): {e}")
                 final_finish_reason = 'error'
                 break
         e = time.time()
@@ -133,7 +133,7 @@ class OpenaiGenerator(Generator):
                 ]
             except Exception as e:
                 import traceback
-                print(f"獲取回應時出錯 (輪次 {round_idx + 1}): {e}")
+                print(f"Error getting response (round {round_idx + 1}): {e}")
                 print(traceback.format_exc())
                 final_finish_reason = 'error'
                 break
@@ -200,7 +200,7 @@ class OpenaiGenerator(Generator):
                     batch_generations.append(result)
                     
                 except Exception as e:
-                    print(f"API 調用錯誤: {e}")
+                    print(f"API call error: {e}")
                     error_result = {
                         'task_id': task_id,
                         'completion_id': completion_id,
