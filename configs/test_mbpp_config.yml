@@ -3,8 +3,8 @@ name: "Test MBPP Evaluation"
 backend:
   - type: openai
     arguments:
-      # API credentials will be loaded from .env file or environment variables
-      # Set OPENAI_API_KEY and OPENAI_BASE_URL in your .env file
+      api_key: sk-b56c488f33b94df297a6314bd037b805
+      base_url: https://labor-openwebui.dgx-coolify.apmic.ai/api/
     model_name: "Qwen3-30B-A3B"
 
 evaluation:
