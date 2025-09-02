@@ -254,14 +254,6 @@ For both backends, the parameter resolution follows this priority:
            pass
    ```
 
-2. **Create metafile.yml**:
-   ```yaml
-   # benchmark/MyBenchmark/metafile.yml
-   Name: MyBenchmark
-   Paper: https://arxiv.org/abs/example
-   Repository: https://github.com/example/benchmark
-   ```
-
 ### Adding Custom Backends
 
 1. **Implement backend class**:
@@ -296,24 +288,11 @@ result/
 - **Execution Rate**: Percentage of solutions that execute without syntax errors
 - **Test Coverage**: Percentage of test cases passed
 
-### Example Results
-```json
-{
-  "benchmark": "MBPP",
-  "score": 0.847,
-  "num_samples": 10,
-  "total_prompts": 374,
-  "pass_at_1": 0.723,
-  "pass_at_5": 0.847,
-  "pass_at_10": 0.892
-}
-```
 
 ## 🔧 Development
 
 ### Project Structure
 ```
-refactor/
 ├── backend/           # Model inference backends
 ├── benchmark/         # Evaluation benchmarks  
 ├── engine/           # Core framework (registry, config)
@@ -324,19 +303,7 @@ refactor/
 └── tests/            # Test suite
 ```
 
-### Contributing
 
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes** and add tests
-4. **Run tests**: `python -m pytest tests/`
-5. **Submit a pull request**
-
-### Code Style
-- Follow PEP 8 guidelines
-- Use type hints where possible
-- Add docstrings for public methods
-- Format with Black: `black .`
 
 ## 🤝 Community
 
