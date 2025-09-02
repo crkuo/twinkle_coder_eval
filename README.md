@@ -1,29 +1,11 @@
 # 🌟 Twinkle Code Evaluator
 
-**Twinkle Code Evaluator** is a production-ready, extensible framework designed for systematic evaluation of Large Language Models (LLMs) on code generation tasks. It provides a unified interface for running multiple benchmarks across different model backends, with support for both API-based models (OpenAI, Claude) and locally-hosted models (vLLM, Hugging Face).
-
-**Key Capabilities:**
-- **Multi-Backend Support**: Seamlessly switch between OpenAI API, vLLM high-performance inference, and custom backends
-- **Comprehensive Benchmark Suite**: Evaluate on MBPP, HumanEval, BigCodeBench, LeetCode, and custom benchmarks
-- **Configuration-Driven Workflow**: YAML-based experiment configuration with environment variable integration
-- **Safe Code Execution**: Sandboxed execution environment with timeout protection and resource limits
-- **Intelligent Result Management**: Automatic parameter-based directory generation prevents result overwrites
-- **Pass@k Evaluation**: Industry-standard metrics with statistical confidence intervals
-- **Production-Ready**: Black-formatted codebase with comprehensive error handling and logging
-
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-green.svg)](https://python.org)
 [![Code Style](https://img.shields.io/badge/Code%20Style-Black-black.svg)](https://github.com/psf/black)
 
-## ✨ Features
+**Twinkle Code Evaluator** is a production-ready, extensible framework designed for systematic evaluation of Large Language Models (LLMs) on code generation tasks. It provides a unified interface for running multiple benchmarks across different model backends, with support for both API-based models (OpenAI, Claude) and locally-hosted models (vLLM, Hugging Face).
 
-- 🚀 **Multiple Backends**: OpenAI API, vLLM, and extensible backend system
-- 📊 **Rich Benchmarks**: MBPP, HumanEval, BigCodeBench, LeetCode, and more
-- ⚙️ **Configuration-Driven**: YAML-based experiment configuration
-- 🔄 **Dynamic Loading**: Automatic component discovery and registration
-- 📈 **Comprehensive Metrics**: Pass@k evaluation with detailed analysis
-- 🛡️ **Safe Execution**: Sandboxed code execution environment
-- 📁 **Smart Results**: Parameter-based directory generation prevents overwrites
 
 ## 🚀 Quick Start
 
